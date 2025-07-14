@@ -3,37 +3,28 @@ GolfBall.__index = GolfBall
 
 local VELOCITY_DECREASE = 0.98 -- Decrease velocity over time to simulate friction
 
-function GolfBall.new(x, y, radius)
+function GolfBall.new(world, x, y, radius)
     local self = setmetatable({}, GolfBall)
 
-    self.x = x
-    self.y = y
-    self.radius = radius
+    self.body = love.physics.newBody(world, x, y, "dynamic")         -- Creates a rigid body for the ball
+    self.shape = love.physics.newCircleShape(radius)                 -- Gives the body a circular shape
+    self.fixture = love.physics.newFixture(self.body, self.shape, 1) -- Attaches the shape to the body and gives a density of 1
+    self.body:setLinearDamping(1)                                    -- Gives the body friction when moving around the world
 
     self.is_moving = false
-    self.velocity_x = 0
-    self.velocity_y = 0
 
     return self
 end
 
-function GolfBall:roll()
-    self.x = self.x + self.velocity_x
-    self.y = self.y + self.velocity_y
-    self.velocity_x = self.velocity_x * VELOCITY_DECREASE
-    self.velocity_y = self.velocity_y * VELOCITY_DECREASE
-
-    if math.abs(self.velocity_x) < 0.1 and math.abs(self.velocity_y) < 0.1 then
-        self.is_moving = false -- Stop moving if velocity is very low
-        self.velocity_x = 0
-        self.velocity_y = 0
-        print("Golf ball stopped moving")
-    end
-end
-
 function GolfBall:display()
     love.graphics.setColor(1, 1, 1)
-    love.graphics.circle("fill", self.x, self.y, self.radius)
+    love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
+end
+
+function GolfBall:isMoving()
+    local threshold = 2
+    local velocity_x, velocity_y = self.body:getLinearVelocity()
+    return math.abs(velocity_x) > threshold or math.abs(velocity_y) > threshold
 end
 
 return GolfBall

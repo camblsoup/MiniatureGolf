@@ -17,26 +17,29 @@ function Player.new()
 end
 
 -- Called when player holds mouse1 on golf ball
-function Player:aim(mouse_x, mouse_y, golf_ball_x, golf_ball_y)
+function Player:aim(mouse_x, mouse_y, golf_ball)
     -- Initial click, prevent aiming if the player doesn't click on the golf ball
     if not self.is_aiming then
-        local dx = mouse_x - golf_ball.x
-        local dy = mouse_y - golf_ball.y
+        local dx = mouse_x - golf_ball.body:getX()
+        local dy = mouse_y - golf_ball.body:getY()
 
         local initial_magnitude = math.sqrt(dx * dx + dy * dy)
-        if initial_magnitude <= golf_ball.radius then
+        if initial_magnitude <= golf_ball.shape:getRadius() then
             self.is_aiming = true
         else
             return
         end
     end
 
-    local dx = mouse_x - golf_ball.x
-    local dy = mouse_y - golf_ball.y
+    local dx = mouse_x - golf_ball.body:getX()
+    local dy = mouse_y - golf_ball.body:getY()
 
     self.mouse_x = mouse_x
     self.mouse_y = mouse_y
-    self.magnitude = math.sqrt(dx * dx + dy * dy)
+    self.magnitude = math.sqrt(dx * dx + dy * dy) * 400
+    if self.magnitude > 200000 then
+        self.magnitude = 200000
+    end
     self.angle = math.atan2(dy, dx)
 end
 
