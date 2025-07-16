@@ -1,4 +1,5 @@
-package.path = package.path .. ";./?.lua"
+local GameScene = {}
+
 local Player = require("Player")
 local GolfBall = require("GolfBall")
 
@@ -7,13 +8,13 @@ local gameWorld
 local player
 local golf_ball
 
-function love.load()
+function GameScene.load()
     gameWorld = love.physics.newWorld(0, 0, true)
     player = Player.new()
     golf_ball = GolfBall.new(gameWorld, 400, 300, 10)
 end
 
-function love.update(dt)
+function GameScene.update(dt)
     gameWorld:update(dt)
     if love.mouse.isDown(1) and not golf_ball:isMoving() then
         local mouse_x, mouse_y = love.mouse.getPosition()
@@ -21,14 +22,14 @@ function love.update(dt)
     end
 end
 
-function love.draw()
+function GameScene.draw()
     golf_ball:display()
     if player.is_aiming then
         player:display_aim(golf_ball.body:getX(), golf_ball.body:getY())
     end
 end
 
-function love.mousereleased(x, y, button)
+function GameScene.mousereleased(x, y, button)
     if player.is_aiming and button == 1 then
         -- player:shoot() -- Send data to server
         player.is_aiming = false
@@ -41,3 +42,5 @@ function love.mousereleased(x, y, button)
         golf_ball.body:applyForce(velocity_x, velocity_y)
     end
 end
+
+return GameScene
