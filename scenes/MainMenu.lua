@@ -1,36 +1,83 @@
-local menu = {}
+local SM = require("lib/sceneManager")
+
+local MainMenu = {
+    buttons = {}
+}
+
+local fontTitle = love.graphics.newFont("assets/dogicapixelbold.ttf", 40)
 
 local width, height = love.graphics.getDimensions()
 
-local fontTitle = love.graphics.newFont("assets/dogicapixelbold.ttf", 40)
-local fontButton = love.graphics.newFont("assets/dogicapixelbold.ttf", 30)
+function MainMenu.load()
+    MainMenu.buttons = {
+        -- host game button
+        host = {
+            img = love.graphics.newImage("assets/img/hostButton.png"),
+            x = 0,
+            y = height - 400,
+            action = function()
+                SM.loadScene("Host")
+            end
+        },
+        -- join game button
+        join = {
+            img = love.graphics.newImage("assets/img/joinButton.png"),
+            x = 0,
+            y = height - 300,
+            action = function()
+                SM.loadScene("Join")
+            end
+        },
+        -- quit game button
+        quit = {
+            img = love.graphics.newImage("assets/img/quitButton.png"),
+            x = 0,
+            y = height - 200,
+            action = function() love.event.quit() end
+        }
+    }
 
-function menu.title()
-    -- color of text
+    for _, button in pairs(MainMenu.buttons) do
+        -- button size
+        button.width = 400
+        button.height = 50
 
-    -- font size
-    love.graphics.setFont(fontTitle)
-
-    -- text
-    love.graphics.printf("MINIATURE", 0, height / 2 - 200, width, "center")
-        love.graphics.printf("GÖLF!", 0, height / 2 - 125, width, "center")
-
+        -- button x-position
+        button.x = (love.graphics.getWidth() - button.width) / 2
+    end
 end
 
--- host button
-function menu.hostButton(img)
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.draw(img, width/2, height/2, 0, 1, 1, 225)
+function MainMenu.draw()
+    MainMenu.title()
+
+    for _, button in pairs(MainMenu.buttons) do
+        love.graphics.draw(button.img,
+            button.x,                               -- x position
+            button.y,                               -- y position
+            0,                                      -- rotation
+            button.width / button.img:getWidth(),   -- x scale
+            button.height / button.img:getHeight()) -- y scale
+    end
 end
 
-function menu.joinButton(img)
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.draw(img, width/2, height/2+ 75, 0 , 1, 1, 225)
+function MainMenu.mousepressed(x, y, button)
+    -- left click
+    if button == 1 then
+        for _, btn in pairs(MainMenu.buttons) do
+            -- find position
+            if x > btn.x and x < btn.x + btn.width and
+                y > btn.y and y < btn.y + btn.height then
+                -- button function
+                btn.action()
+            end
+        end
+    end
 end
 
-function menu.quitButton(img)
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.draw(img, width/2, height/2 + 150, 0, 1, 1, 225)
+function MainMenu.title()
+    love.graphics.setFont(fontTitle, width)
+    love.graphics.printf("MINIATURE", 0, 100, love.graphics.getWidth(), "center")
+    love.graphics.printf("GÖLF!", 0, 150, love.graphics.getWidth(), "center")
 end
 
-return menu;
+return MainMenu
