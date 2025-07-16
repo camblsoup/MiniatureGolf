@@ -33,7 +33,9 @@ function MainMenu.load()
             img = love.graphics.newImage("assets/img/quitButton.png"),
             x = 0,
             y = height - 200,
-            action = function() love.event.quit() end
+            action = function()
+                love.event.quit()
+            end
         }
     }
 
