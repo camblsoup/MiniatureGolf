@@ -1,24 +1,19 @@
 package.path = package.path .. ";./?.lua"
 
-local menu = require("scenes/MainMenu")
-
-local hostButton
-local joinButton
-local quitButton
+local SM = require("lib/sceneManager")
 
 function love.load()
-
-    -- images
-    hostButton = love.graphics.newImage("assets/img/hostButton.png")
-    joinButton = love.graphics.newImage("assets/img/joinButton.png")
-    quitButton = love.graphics.newImage("assets/img/quitButton.png")
-
+    SM.loadScene("MainMenu")
 end
 
+function love.update(dt)
+    SM.update(dt)
+end
 
 function love.draw()
-    menu.title()
-    menu.hostButton(hostButton)
-    menu.joinButton(joinButton)
-    menu.quitButton(quitButton)
+    SM.draw()
+end
+
+function love.mousepressed(x, y, button)
+    SM.mousepressed(x, y, button)
 end
