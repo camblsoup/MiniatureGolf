@@ -1,15 +1,26 @@
 local SceneManager = {
-    currentScene = nil
+    currentScene = nil,
+    currentScenePath = nil
 }
 
 function SceneManager.loadScene(sceneName)
+    assert(type(sceneName) == "string", "Function 'loadScene': first parameter must be a string")
+    assert(love.filesystem.getInfo("scenes/" .. sceneName .. ".lua"), "Function: 'loadScene': scene file not found")
+
+
     -- unload current scene
     if SceneManager.currentScene and SceneManager.currentScene.unload then
         SceneManager.currentScene.unload()
-    end 
+    end
+    if SceneManager.currentScene then
+        SceneManager.unloadScene(SceneManager.currentScenePath)
+    end
+
+    -- Update current scenes path
+    SceneManager.currentScenePath = "scenes/" .. sceneName
 
     -- load the new scene
-    local scene = require("scenes/" .. sceneName)
+    local scene = require(SceneManager.currentScenePath)
     if scene.load then
         scene.load()
     end
@@ -18,16 +29,26 @@ function SceneManager.loadScene(sceneName)
     SceneManager.currentScene = scene
 end
 
+function SceneManager.unloadScene(sceneName)
+    assert(type(sceneName) == "string", "Function 'unloadScene': parameter must be a string")
+    assert(love.filesystem.getInfo(sceneName .. ".lua"), "Function 'unloadScene': scene file not found")
+
+    if package.loaded[sceneName] then
+        package.loaded[sceneName] = nil
+    end
+end
+
 function SceneManager.update(dt)
+    assert(type(dt) == "number", "Function 'update': parameter must be a number")
     if SceneManager.currentScene and SceneManager.currentScene.update then
         SceneManager.currentScene.update(dt)
     end
 end
 
 function SceneManager.draw()
-    if SceneManager.currentScene and SceneManager.currentScene.draw then
-        SceneManager.currentScene.draw()
-    end
+    assert(SceneManager.currentScene.draw, "Function 'draw': current scene doesn't store a draw function")
+
+    SceneManager.currentScene.draw()
 end
 
 function SceneManager.mousepressed(x, y, button)
@@ -35,5 +56,5 @@ function SceneManager.mousepressed(x, y, button)
         SceneManager.currentScene.mousepressed(x, y, button)
     end
 end
- 
+
 return SceneManager
