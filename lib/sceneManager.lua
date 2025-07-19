@@ -57,4 +57,10 @@ function SceneManager.mousepressed(x, y, button)
     end
 end
 
+function SceneManager.mousereleased(x, y, button)
+    if SceneManager.currentScene and SceneManager.currentScene.mousereleased then
+        SceneManager.currentScene.mousereleased(x, y, button)
+    end
+end
+
 return SceneManager
