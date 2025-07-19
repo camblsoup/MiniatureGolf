@@ -9,22 +9,32 @@ function Server.new() -- load
     local self = setmetatable({}, Server)
 
     self.level_index = 1
+    self.clients = {}
+    self.current_player = 1 -- Current player doesn't currently change
+    self.game_world = love.physics.newWorld(0, 0, true)
+    self.golf_ball = GolfBall.new(self.game_world, 425, 300, 10, {0, 0, 1})
     self.obstacles_data = {}
     self.obstacles = {}
-    self.game_world = love.physics.newWorld(0, 0, true)
-    self.current_player = 1 -- Current player doesn't currently change
-    self.have_data_to_send = false
-    -- self.golf_ball = GolfBall.new(self.gameWorld, 400, 300, 10)
+    self.ball_in_motion = false
 
     return self
 end
 
 function Server:update(dt)
-    
+    self.game_world:update(dt)
+    if self.ball_in_motion then
+        if not self.golf_ball:isMoving() then
+            self.ball_in_motion = false
+            
+            for _, client in ipairs(self.clients) do
+                client.finish_ball_shoot()
+            end
+        end
+    end
 end
 
 function Server:draw()
-    
+    self.golf_ball:display() -- Testing purposes
 end
 
 function Server:generate_level()
@@ -33,8 +43,15 @@ function Server:generate_level()
         local obstacle = Obstacle.new(self.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height)
         table.insert(self.obstacles, obstacle)
     end
-    self.have_data_to_send = true
-    -- For each client, send the level data
+    
+    for _, client in ipairs(self.clients) do
+        client.generate_level()
+    end
+end
+
+function Server:launch_ball(velocity_x, velocity_y)
+    self.golf_ball.body:applyForce(velocity_x, velocity_y)
+    self.ball_in_motion = true
 end
 
 return Server

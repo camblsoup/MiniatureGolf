@@ -3,7 +3,7 @@ package.path = package.path .. ";./?.lua"
 local SM = require("lib/sceneManager")
 
 function love.load()
-    SM.loadScene("Game")
+    SM.loadScene("Client")
 end
 
 function love.update(dt)
