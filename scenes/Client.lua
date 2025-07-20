@@ -1,28 +1,27 @@
 local Client = {
     game_world = nil,
     player = nil,
-    golf_ball = nil,
-    obstacles = {},
     obstacles_data = {},
+    obstacles = {},
+    goal = nil,
+    golf_ball = nil,
     player_id = nil,
 }
 
 local Player = require("classes/Player")
 local GolfBall = require("classes/GolfBall")
 local Obstacle = require("classes/Obstacle")
+local Goal = require("classes/Goal")
 local Server = require("classes/Server")
 
 local server = nil
 
 function Client.load()
-    Client.game_world = love.physics.newWorld(0, 0, true)
-    Client.player = Player.new()
-    Client.golf_ball = GolfBall.new(Client.game_world, 400, 300, 10)
-
     server = Server.new()
     table.insert(server.clients, Client)
-    Client.player_id = #server.clients
     server:generate_level()
+    Client.player_id = #server.clients
+    Client.player = Player.new()
 end
 
 function Client.update(dt)
@@ -41,6 +40,7 @@ function Client.draw()
         Client.player:display_aim(Client.golf_ball.body:getX(), Client.golf_ball.body:getY())
     end
 
+    Client.goal:draw()
     for _, obstacle in ipairs(Client.obstacles) do
         obstacle:draw()
     end
@@ -55,10 +55,18 @@ function Client.mousereleased(x, y, button)
 end
 
 function Client.generate_level()
+    Client.game_world = love.physics.newWorld(0, 0, true)
     Client.obstacles_data = server.obstacles_data
-    for _, obstacle_data in ipairs(Client.obstacles_data) do
-        local obstacle = Obstacle.new(Client.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height)
-        table.insert(Client.obstacles, obstacle)
+    
+    local golf_ball_data = Client.obstacles_data[1]
+    local goal_data = Client.obstacles_data[2]
+    Client.golf_ball = GolfBall.new(Client.game_world, golf_ball_data.x, golf_ball_data.y, 10)
+    Client.goal = Goal.new(Client.game_world, goal_data.x, goal_data.y)
+
+    Client.obstacles = {}
+    for i = 3, #Client.obstacles_data do
+        local obstacle_data = Client.obstacles_data[i]
+        table.insert(Client.obstacles, Obstacle.new(Client.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height))
     end
 end
 

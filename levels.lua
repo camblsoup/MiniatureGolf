@@ -1,17 +1,20 @@
 return {
     {
-        {x = 200, y = 200, width = 100, height = 20},
-        {x = 300, y = 300, width = 150, height = 30},
-        {x = 500, y = 100, width = 50, height = 50},
+        {x = 300, y = 300}, -- Golf ball location
+        {x = 500, y = 300}, -- Goal location
+        {x = 500, y = 200, width = 450, height = 10},
+        {x = 500, y = 400, width = 450, height = 10},
     },
     {
-        {x = 100, y = 150, width = 80, height = 40},
-        {x = 400, y = 250, width = 120, height = 60},
-        {x = 600, y = 350, width = 200, height = 20},
+        {x = 400, y = 100}, -- Golf ball location
+        {x = 600, y = 100}, -- Goal location
+        {x = 500, y = 50, width = 200, height = 10},
+        {x = 500, y = 150, width = 200, height = 10},
     },
     {
-        {x = 150, y = 200, width = 100, height = 30},
-        {x = 250, y = 300, width = 150, height = 50},
-        {x = 450, y = 400, width = 80, height = 40},
+        {x = 500, y = 250}, -- Golf ball location
+        {x = 500, y = 500}, -- Goal location
+        {x = 400, y = 500, width = 10, height = 500},
+        {x = 600, y = 500, width = 10, height = 500},
     }
 }
