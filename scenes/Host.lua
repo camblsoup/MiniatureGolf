@@ -31,7 +31,6 @@ function HostScene.load()
     }
     for name, button in pairs(HostScene.buttons) do
         -- button size
-
         if name == "back" then
             button.width = 56
             button.height = 56
@@ -40,7 +39,6 @@ function HostScene.load()
             button.height = 50
             button.x = (love.graphics.getWidth() - button.width) / 2
         end
-        
     end
 end
 
