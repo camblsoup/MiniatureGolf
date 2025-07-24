@@ -57,6 +57,19 @@ function HostScene.IP()
 end
 
 -------------------------------------------------------------
+
+function HostScene.playerCount(playerCount)
+    -- eventually, it should pass in a parameter to get the number of players
+    local count = playerCount
+    local height_pos = 300
+
+    love.graphics.setFont(fontIP, width)
+    love.graphics.printf("Your IP:", 0, 100, love.graphics.getWidth(), "center")
+    love.graphics.printf(count, 0, height_pos, love.graphics.getWidth() - 30, "center")
+    love.graphics.printf("/4", 0, height_pos, love.graphics.getWidth() + 30, "center")
+end
+
+-------------------------------------------------------------
 -- START BUTTON
 function HostScene.startButton()
 
@@ -64,6 +77,7 @@ end
 
 -------------------------------------------------------------
 function HostScene.draw()
+    local player_count = 3 -- change this later
     HostScene.IP()
 
     for _, button in pairs(HostScene.buttons) do
@@ -74,6 +88,8 @@ function HostScene.draw()
             button.width / button.img:getWidth(),   -- x scale
             button.height / button.img:getHeight()) -- y scale
     end
+
+    HostScene.playerCount(player_count)
 end
 
 -------------------------------------------------------------
