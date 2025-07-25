@@ -20,6 +20,10 @@ function Server.new() -- load
     self.golf_ball = nil
     self.ball_in_motion = false
 
+    self.game_world = love.physics.newWorld(0, 0, true)
+
+    self:generate_level()
+
     return self
 end
 
@@ -27,7 +31,7 @@ end
 -- initializing the network
 function Server:initNetwork(port)
     self.server = assert(socket.bind("*", port))
-    self.client:settimeout(0)
+    self.server:settimeout(0) 
     self.network_clients = {}
     self.acceptCoroutine = coroutine.create(function() self:accept_clients() end)
 end
