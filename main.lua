@@ -7,13 +7,21 @@ local SM = require("lib/sceneManager")
 
 function love.load()
     server = Server.new()
-    server:initNetwork(22222)
+
     SM.loadScene("Client")
 end
 
 function love.update(dt)
+    if server and server.network_thread then
+        local success, message = pcall(function() 
+            return server.network_thread:getMessage() 
+        end)
+        if success and message then
+            print("Thread message:", message)
+        end
+    end
+    
     server:update(dt)
-    server:updateNetwork()
     SM.update(dt)
 end
 

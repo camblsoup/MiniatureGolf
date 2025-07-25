@@ -21,76 +21,38 @@ function Server.new() -- load
     self.ball_in_motion = false
 
     self.game_world = love.physics.newWorld(0, 0, true)
+    
 
-    self:generate_level()
+    self.network_thread = love.thread.newThread("network_server.lua")
+    self.network_thread:start()
 
     return self
 end
 
 
--- initializing the network
-function Server:initNetwork(port)
-    self.server = assert(socket.bind("*", port))
-    self.server:settimeout(0) 
-    self.network_clients = {}
-    self.acceptCoroutine = coroutine.create(function() self:accept_clients() end)
-end
-
-
-function Server:accept_clients()
-    while true do
-        local client = self.server:accept()
-        if client then
-            client:settimeout(0)
-            local clientObj = {
-                socket = client,
-                disconnected = false,
-                id = #self.network_clients + 1
-            }
-            table.insert(self.network_clients, clientObj)
-            print("New Client connected")
-        end
-        coroutine.yield()
-    end
-end
-
--- handling client objects
---function Server:handleClient(clientObj)
-    --while true do
-        --local data,err = clientObj:receive()
-        --if data then
-            --clientObj:settimeout(0)
-            
-
-function Server:updateNetwork()
-    coroutine.resume(self.acceptCoroutine)
-    for i = #self.network_clients, 1, -1 do
-        local clientObj = self.network_clients[i]
-        if clientObj.coroutine then
-            coroutine.resume(clientObj.coroutine)
-        end
-
-        if clientObj.disconnected then
-            table.remove(self.network_clients, i)
-        end
-    end
-end
 
 
 function Server:update(dt)
-    self.game_world:update(dt)
+    if self.game_world then
+        self.game_world:update(dt)
+    end
 
-    if self.ball_in_motion then
+    if self.ball_in_motion and self.golf_ball then
         if not self.golf_ball:isMoving() then
             self.ball_in_motion = false        
             for _, client in ipairs(self.clients) do
-                client.finish_ball_shoot()
+                if client.finish_ball_shoot then
+                    client.finish_ball_shoot()
+                end
             end
         end
     end
 
-    if self.goal:check_reached(self.golf_ball.body) then
-        self:next_level()
+    -- safety checks here
+    if self.goal and self.golf_ball then
+        if self.goal:check_reached(self.golf_ball.body) then
+            self:next_level()
+        end
     end
 end
 
