@@ -8,6 +8,7 @@ local SM = require("lib/sceneManager")
 function love.load()
     server = Server.new()
 
+    love.physics.setMeter(30)
     SM.loadScene("Client")
 end
 
