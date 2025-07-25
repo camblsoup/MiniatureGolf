@@ -1,7 +1,9 @@
 local Player = {}
 Player.__index = Player
 
-local FORCE_SCALE = 20 -- Scale up the force applied to the golf ball
+local FORCE_SCALE = 100 -- Scale up the force applied to the golf ball
+local VIRTUAL_WIDTH = 192
+local VIRTUAL_HEIGHT = 108
 
 function Player.new()
     local self = setmetatable({}, Player)
@@ -12,6 +14,8 @@ function Player.new()
     self.is_aiming = false
     self.mouse_x = 0
     self.mouse_y = 0
+    self.normalized_mouse_x = 0
+    self.normalized_mouse_y = 0
     self.shooting_magnitude = 0
     self.shooting_angle = 0
 
@@ -33,16 +37,29 @@ function Player:aim(mouse_x, mouse_y, golf_ball)
         end
     end
 
-    local dx = (mouse_x - golf_ball.body:getX()) / love.physics.getMeter()
-    local dy = (mouse_y - golf_ball.body:getY()) / love.physics.getMeter()
+    local scale_x = love.graphics.getWidth() / VIRTUAL_WIDTH
+    local scale_y = love.graphics.getHeight() / VIRTUAL_HEIGHT
 
     self.mouse_x = mouse_x
     self.mouse_y = mouse_y
-    self.shooting_magnitude = math.sqrt(dx * dx + dy * dy)
-    if self.shooting_magnitude > 7 then
-        self.shooting_magnitude = 7
-    end
+    self.normalized_mouse_x = mouse_x / scale_x
+    self.normalized_mouse_y = mouse_y / scale_y
+
+    local dx = (self.mouse_x - golf_ball.body:getX())
+    local dy = (self.mouse_y - golf_ball.body:getY())
+
     self.shooting_angle = math.atan2(dy, dx)
+
+    local ball_x = golf_ball.body:getX() / scale_x
+    local ball_y = golf_ball.body:getY() / scale_y
+
+    dx = (self.normalized_mouse_x - ball_x) / love.physics.getMeter()
+    dy = (self.normalized_mouse_y - ball_y) / love.physics.getMeter()
+
+    self.shooting_magnitude = math.sqrt(dx * dx + dy * dy)
+    if self.shooting_magnitude > 1.0 then
+        self.shooting_magnitude = 1.0
+    end
 end
 
 function Player:display_aim(golf_ball_x, golf_ball_y)
