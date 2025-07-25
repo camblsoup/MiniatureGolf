@@ -9,6 +9,7 @@ local levels = require("levels")
 function Server.new() -- load
     local self = setmetatable({}, Server)
 
+    -- Server state variables
     self.level_index = 1
     self.clients = {}
     self.current_shooter = 1
@@ -17,6 +18,10 @@ function Server.new() -- load
     self.goal = nil
     self.golf_ball = nil
     self.ball_in_motion = false
+
+    -- Gameplay variables
+    self.current_shots = 0
+    self.high_score = 0
 
     return self
 end
@@ -36,7 +41,9 @@ function Server:update(dt)
 end
 
 function Server:draw()
-    love.graphics.print("Current Shooter: " .. self.current_shooter, 10, 10)
+    love.graphics.print("Server Current Shooter: " .. self.current_shooter, 10, 10)
+    love.graphics.print("\n\nCurrent Shots: " .. self.current_shots, 10, 30)
+    love.graphics.print("\n\n\nHigh Score: " .. self.high_score, 10, 50)
     self.golf_ball:display() -- Testing purposes
 end
 
@@ -61,6 +68,12 @@ function Server:generate_level()
     end
 end
 
+function Server:launch_ball(velocity_x, velocity_y)
+    self.golf_ball.body:applyLinearImpulse(velocity_x, velocity_y)
+    self.ball_in_motion = true
+    self.current_shots = self.current_shots + 1
+end
+
 function Server:finish_ball_shoot()
     self.ball_in_motion = false
     self.current_shooter = self.current_shooter % 4 + 1 -- Cycle through clients
@@ -74,14 +87,15 @@ function Server:next_level()
     self.level_index = self.level_index + 1
     if self.level_index > #levels then
         self.level_index = 1
+        if self.high_score == 0 then
+            self.high_score = self.current_shots
+        else
+            self.high_score = math.min(self.high_score, self.current_shots)
+        end
+        self.current_shots = 0
     end
     self.game_world:destroy()
     self:generate_level()
-end
-
-function Server:launch_ball(velocity_x, velocity_y)
-    self.golf_ball.body:applyLinearImpulse(velocity_x, velocity_y)
-    self.ball_in_motion = true
 end
 
 return Server
