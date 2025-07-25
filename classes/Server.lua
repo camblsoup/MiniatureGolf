@@ -1,4 +1,6 @@
 local Server = {}
+local socket = require("socket")
+
 Server.__index = Server
 
 local GolfBall = require("classes/GolfBall")
@@ -20,6 +22,56 @@ function Server.new() -- load
 
     return self
 end
+
+
+-- initializing the network
+function Server:initNetwork(port)
+    self.server = assert(socket.bind("*", port))
+    self.client:settimeout(0)
+    self.network_clients = {}
+    self.acceptCoroutine = coroutine.create(function() self:accept_clients() end)
+end
+
+
+function Server:accept_clients()
+    while true do
+        local client = self.server:accept()
+        if client then
+            client:settimeout(0)
+            local clientObj = {
+                socket = client,
+                disconnected = false,
+                id = #self.network_clients + 1
+            }
+            table.insert(self.network_clients, clientObj)
+            print("New Client connected")
+        end
+        coroutine.yield()
+    end
+end
+
+-- handling client objects
+--function Server:handleClient(clientObj)
+    --while true do
+        --local data,err = clientObj:receive()
+        --if data then
+            --clientObj:settimeout(0)
+            
+
+function Server:updateNetwork()
+    coroutine.resume(self.acceptCoroutine)
+    for i = #self.network_clients, 1, -1 do
+        local clientObj = self.network_clients[i]
+        if clientObj.coroutine then
+            coroutine.resume(clientObj.coroutine)
+        end
+
+        if clientObj.disconnected then
+            table.remove(self.network_clients, i)
+        end
+    end
+end
+
 
 function Server:update(dt)
     self.game_world:update(dt)
