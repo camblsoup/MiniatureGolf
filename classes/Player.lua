@@ -63,7 +63,7 @@ function Player:aim(mouse_x, mouse_y, golf_ball)
 end
 
 function Player:display_aim(golf_ball_x, golf_ball_y)
-    love.graphics.setColor(1, 0, 0)
+    love.graphics.setColor(1, 1, 1)
     love.graphics.line(self.mouse_x, self.mouse_y, golf_ball_x, golf_ball_y)
 
     love.graphics.setColor(1, 1, 1, 1)

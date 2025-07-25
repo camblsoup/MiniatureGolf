@@ -6,6 +6,7 @@ local Client = {
     goal = nil,
     golf_ball = nil,
     player_id = nil,
+    is_current_shooter = false,
 }
 
 local Player = require("classes/Player")
@@ -22,11 +23,12 @@ function Client.load()
     server:generate_level()
     Client.player_id = #server.clients
     Client.player = Player.new()
+    Client.is_current_shooter = Client.player_id == 1
 end
 
 function Client.update(dt)
     Client.game_world:update(dt)
-    if love.mouse.isDown(1) and not Client.golf_ball:isMoving() then
+    if Client.is_current_shooter and love.mouse.isDown(1) and not Client.golf_ball:isMoving() then
         local mouse_x, mouse_y = love.mouse.getPosition()
         Client.player:aim(mouse_x, mouse_y, Client.golf_ball)
     end
@@ -35,6 +37,7 @@ function Client.update(dt)
 end
 
 function Client.draw()
+    love.graphics.print("\nCurrent Client: " .. Client.player_id, 10, 10)
     Client.golf_ball:display()
     if Client.player.is_aiming then
         Client.player:display_aim(Client.golf_ball.body:getX(), Client.golf_ball.body:getY())
@@ -54,6 +57,14 @@ function Client.mousereleased(x, y, button)
     end
 end
 
+-- For testing purposes
+-- Once we have an actual server-client architecture, this will be removed (Player id should not ever change)
+function Client.keypressed(key)
+    if key == "q" then
+        Client.player_id = Client.player_id % 4 + 1
+    end
+end
+
 function Client.generate_level()
     Client.game_world = love.physics.newWorld(0, 0, true)
     Client.obstacles_data = server.obstacles_data
@@ -70,12 +81,14 @@ function Client.generate_level()
     end
 end
 
-function Client.finish_ball_shoot()
+function Client.finish_ball_shoot(new_current_shooter_id)
     Client.golf_ball.body:setPosition(server.golf_ball.body:getX(), server.golf_ball.body:getY())
     Client.player.mouse_x = 0
     Client.player.mouse_y = 0
     Client.player.shooting_magnitude = 0
     Client.player.shooting_angle = 0
+    Client.is_current_shooter = Client.player_id == new_current_shooter_id
+    Client.golf_ball:update_color(new_current_shooter_id)
 end
 
 return Client

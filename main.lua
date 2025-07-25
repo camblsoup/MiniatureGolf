@@ -22,3 +22,7 @@ end
 function love.mousereleased(x, y, button)
     SM.mousereleased(x, y, button)
 end
+
+function love.keypressed(key)
+    SM.keypressed(key)
+end

@@ -11,7 +11,7 @@ function Server.new() -- load
 
     self.level_index = 1
     self.clients = {}
-    self.current_player = 1 -- Current player doesn't currently change
+    self.current_shooter = 1
     self.obstacles_data = {}
     self.obstacles = {}
     self.goal = nil
@@ -26,10 +26,7 @@ function Server:update(dt)
 
     if self.ball_in_motion then
         if not self.golf_ball:isMoving() then
-            self.ball_in_motion = false
-            for _, client in ipairs(self.clients) do
-                client.finish_ball_shoot()
-            end
+            self:finish_ball_shoot()
         end
     end
 
@@ -39,6 +36,7 @@ function Server:update(dt)
 end
 
 function Server:draw()
+    love.graphics.print("Current Shooter: " .. self.current_shooter, 10, 10)
     self.golf_ball:display() -- Testing purposes
 end
 
@@ -48,7 +46,7 @@ function Server:generate_level()
 
     local golf_ball_data = self.obstacles_data[1]
     local goal_data = self.obstacles_data[2]
-    self.golf_ball = GolfBall.new(self.game_world, golf_ball_data.x, golf_ball_data.y, 10, { 0, 0, 1 })
+    self.golf_ball = GolfBall.new(self.game_world, golf_ball_data.x, golf_ball_data.y, 10, true)
     self.goal = Goal.new(self.game_world, goal_data.x, goal_data.y)
 
     self.obstacles = {}
@@ -60,6 +58,15 @@ function Server:generate_level()
 
     for _, client in ipairs(self.clients) do
         client.generate_level()
+    end
+end
+
+function Server:finish_ball_shoot()
+    self.ball_in_motion = false
+    self.current_shooter = self.current_shooter % 4 + 1 -- Cycle through clients
+
+    for _, client in ipairs(self.clients) do
+        client.finish_ball_shoot(self.current_shooter)
     end
 end
 
