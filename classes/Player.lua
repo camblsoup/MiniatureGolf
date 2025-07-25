@@ -1,7 +1,7 @@
 local Player = {}
 Player.__index = Player
 
-local FORCE_SCALE = 15 -- Scale down the force applied to the golf ball
+local FORCE_SCALE = 20 -- Scale up the force applied to the golf ball
 
 function Player.new()
     local self = setmetatable({}, Player)
@@ -33,14 +33,14 @@ function Player:aim(mouse_x, mouse_y, golf_ball)
         end
     end
 
-    local dx = mouse_x - golf_ball.body:getX()
-    local dy = mouse_y - golf_ball.body:getY()
+    local dx = (mouse_x - golf_ball.body:getX()) / love.physics.getMeter()
+    local dy = (mouse_y - golf_ball.body:getY()) / love.physics.getMeter()
 
     self.mouse_x = mouse_x
     self.mouse_y = mouse_y
-    self.shooting_magnitude = math.sqrt(dx * dx + dy * dy) * 400
-    if self.shooting_magnitude > 200000 then
-        self.shooting_magnitude = 200000
+    self.shooting_magnitude = math.sqrt(dx * dx + dy * dy)
+    if self.shooting_magnitude > 7 then
+        self.shooting_magnitude = 7
     end
     self.shooting_angle = math.atan2(dy, dx)
 end
@@ -48,17 +48,20 @@ end
 function Player:display_aim(golf_ball_x, golf_ball_y)
     love.graphics.setColor(1, 0, 0)
     love.graphics.line(self.mouse_x, self.mouse_y, golf_ball_x, golf_ball_y)
+
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.print(self.shooting_magnitude)
 end
 
 -- Called when player releases the mouse button
 function Player:shoot(server, golf_ball)
     self.is_aiming = false
-    local force = self.shooting_magnitude / FORCE_SCALE
+    local force = self.shooting_magnitude * FORCE_SCALE
     local angle = self.shooting_angle
     local velocity_x = -force * math.cos(angle)
     local velocity_y = -force * math.sin(angle)
-    golf_ball.body:applyForce(velocity_x, velocity_y)
-    
+    golf_ball.body:applyLinearImpulse(velocity_x, velocity_y)
+
     server:launch_ball(velocity_x, velocity_y)
 end
 

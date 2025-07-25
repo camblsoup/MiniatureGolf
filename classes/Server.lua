@@ -26,7 +26,7 @@ function Server:update(dt)
 
     if self.ball_in_motion then
         if not self.golf_ball:isMoving() then
-            self.ball_in_motion = false        
+            self.ball_in_motion = false
             for _, client in ipairs(self.clients) do
                 client.finish_ball_shoot()
             end
@@ -45,18 +45,19 @@ end
 function Server:generate_level()
     self.game_world = love.physics.newWorld(0, 0, true)
     self.obstacles_data = levels[self.level_index]
-    
+
     local golf_ball_data = self.obstacles_data[1]
     local goal_data = self.obstacles_data[2]
-    self.golf_ball = GolfBall.new(self.game_world, golf_ball_data.x, golf_ball_data.y, 10, {0, 0, 1})
+    self.golf_ball = GolfBall.new(self.game_world, golf_ball_data.x, golf_ball_data.y, 10, { 0, 0, 1 })
     self.goal = Goal.new(self.game_world, goal_data.x, goal_data.y)
 
     self.obstacles = {}
     for i = 3, #self.obstacles_data do
         local obstacle_data = self.obstacles_data[i]
-        table.insert(self.obstacles, Obstacle.new(self.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height))
+        table.insert(self.obstacles,
+            Obstacle.new(self.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height))
     end
-    
+
     for _, client in ipairs(self.clients) do
         client.generate_level()
     end
@@ -72,7 +73,7 @@ function Server:next_level()
 end
 
 function Server:launch_ball(velocity_x, velocity_y)
-    self.golf_ball.body:applyForce(velocity_x, velocity_y)
+    self.golf_ball.body:applyLinearImpulse(velocity_x, velocity_y)
     self.ball_in_motion = true
 end
 
