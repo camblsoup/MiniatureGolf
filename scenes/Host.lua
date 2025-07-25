@@ -1,11 +1,12 @@
 local SM = require("lib/sceneManager")
 
+local fontIP = love.graphics.newFont("assets/dogicapixelbold.ttf", 20)
+local width, height = love.graphics.getDimensions()
+local player_count = math.random(4) -- change this later
+
 local HostScene = {
     buttons = {}
 }
-
-local fontIP = love.graphics.newFont("assets/dogicapixelbold.ttf", 20)
-local width, height = love.graphics.getDimensions()
 -------------------------------------------------------------
 -- load
 function HostScene.load()
@@ -41,43 +42,9 @@ function HostScene.load()
         end
     end
 end
-
--------------------------------------------------------------
--- your IP address
-function HostScene.IP()
-    love.graphics.setFont(fontIP, width)
-
-    love.graphics.printf("Your IP:", 0, 100, love.graphics.getWidth(), "center")
-
-    love.graphics.printf("Open command prompt and type 'ipconfig'",
-        0, 150, love.graphics.getWidth(), "center")
-
-    love.graphics.printf("Your friends will connect with IPv4 address!",
-        0, 200, love.graphics.getWidth(), "center")
-end
-
--------------------------------------------------------------
-
-function HostScene.playerCount(playerCount)
-    -- eventually, it should pass in a parameter to get the number of players
-    local count = playerCount
-    local height_pos = 300
-
-    love.graphics.setFont(fontIP, width)
-    love.graphics.printf("Your IP:", 0, 100, love.graphics.getWidth(), "center")
-    love.graphics.printf(count, 0, height_pos, love.graphics.getWidth() - 30, "center")
-    love.graphics.printf("/4", 0, height_pos, love.graphics.getWidth() + 30, "center")
-end
-
--------------------------------------------------------------
--- START BUTTON
-function HostScene.startButton()
-
-end
-
 -------------------------------------------------------------
 function HostScene.draw()
-    local player_count = 3 -- change this later
+    -- local player_count = math.random(4) -- change this later
     HostScene.IP()
 
     for _, button in pairs(HostScene.buttons) do
@@ -91,8 +58,38 @@ function HostScene.draw()
 
     HostScene.playerCount(player_count)
 end
-
 -------------------------------------------------------------
+-- your IP address
+function HostScene.IP()
+    love.graphics.setFont(fontIP, width)
+
+    love.graphics.printf("Your IP:", 0, 100, love.graphics.getWidth(), "center")
+
+    love.graphics.printf("Open command prompt and type 'ipconfig'",
+        0, 150, love.graphics.getWidth(), "center")
+
+    love.graphics.printf("Your friends will connect with IPv4 address!",
+        0, 200, love.graphics.getWidth(), "center")
+end
+-------------------------------------------------------------
+-- get the number of players to display the x/4 players on the host's end
+function HostScene.playerCount(playerCount)
+    -- eventually, it should pass in a parameter to get the number of players
+    local count = playerCount
+    local height_pos = 300
+
+    love.graphics.setFont(fontIP, width)
+    love.graphics.printf("Your IP:", 0, 100, love.graphics.getWidth(), "center")
+    love.graphics.printf(count, 0, height_pos, love.graphics.getWidth() - 30, "center")
+    love.graphics.printf("/4", 0, height_pos, love.graphics.getWidth() + 30, "center")
+end
+-------------------------------------------------------------
+-- START BUTTON
+function HostScene.startButton()
+
+end
+-------------------------------------------------------------
+-- mouse press function
 function HostScene.mousepressed(x, y, button)
     -- left click
     if button == 1 then

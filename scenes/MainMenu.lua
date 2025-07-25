@@ -1,13 +1,11 @@
 local SM = require("lib/sceneManager")
 
+local fontTitle = love.graphics.newFont("assets/dogicapixelbold.ttf", 40)
+local width, height = love.graphics.getDimensions()
 local MainMenu = {
     buttons = {}
 }
-
-local fontTitle = love.graphics.newFont("assets/dogicapixelbold.ttf", 40)
-
-local width, height = love.graphics.getDimensions()
-
+-------------------------------------------------------------
 function MainMenu.load()
     MainMenu.buttons = {
         -- host game button
@@ -48,7 +46,7 @@ function MainMenu.load()
         button.x = (love.graphics.getWidth() - button.width) / 2
     end
 end
-
+-------------------------------------------------------------
 function MainMenu.draw()
     MainMenu.title()
 
@@ -61,7 +59,7 @@ function MainMenu.draw()
             button.height / button.img:getHeight()) -- y scale
     end
 end
-
+-------------------------------------------------------------
 function MainMenu.mousepressed(x, y, button)
     -- left click
     if button == 1 then
@@ -75,7 +73,7 @@ function MainMenu.mousepressed(x, y, button)
         end
     end
 end
-
+-------------------------------------------------------------
 function MainMenu.title()
     love.graphics.setFont(fontTitle, width)
     love.graphics.printf("MINIATURE", 0, 100, love.graphics.getWidth(), "center")
