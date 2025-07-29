@@ -87,6 +87,10 @@ function Server:finish_ball_shoot()
     end
 end
 
+function Server:get_shooting_player_id()
+    return self.current_shooter
+end
+
 function Server:next_level()
     self.level_index = self.level_index + 1
     if self.level_index > #levels then

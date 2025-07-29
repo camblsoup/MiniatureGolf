@@ -6,7 +6,6 @@ local Client = {
     goal = nil,
     golf_ball = nil,
     player_id = nil,
-    is_current_shooter = false,
 }
 
 local Player = require("classes/Player")
@@ -23,12 +22,11 @@ function Client.load()
     server:generate_level()
     Client.player_id = #server.clients
     Client.player = Player.new()
-    Client.is_current_shooter = Client.player_id == 1
 end
 
 function Client.update(dt)
     Client.game_world:update(dt)
-    if Client.is_current_shooter and love.mouse.isDown(1) and not Client.golf_ball:isMoving() then
+    if love.mouse.isDown(1) and not Client.golf_ball:isMoving() and Client.player_id == server:get_shooting_player_id() then
         local mouse_x, mouse_y = love.mouse.getPosition()
         Client.player:aim(mouse_x, mouse_y, Client.golf_ball)
     end
@@ -93,7 +91,6 @@ function Client.finish_ball_shoot(new_current_shooter_id)
     Client.player.mouse_y = 0
     Client.player.shooting_magnitude = 0
     Client.player.shooting_angle = 0
-    Client.is_current_shooter = Client.player_id == new_current_shooter_id
     Client.golf_ball:update_color(new_current_shooter_id)
 end
 
