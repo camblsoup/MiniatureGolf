@@ -1,6 +1,6 @@
 local SM = require("lib/sceneManager")
 
-local font = love.graphics.newFont("assets/dogicapixelbold.ttf", 30)
+local font = love.graphics.newFont("assets/dogicapixelbold.ttf", 20)
 local width, height = love.graphics.getDimensions()
 local text
 local box = {
@@ -52,9 +52,19 @@ function JoinScene.draw()
             button.width / button.img:getWidth(),   -- x scale
             button.height / button.img:getHeight()) -- y scale
     end
+
+    love.graphics.printf("Join with the host's IP and port number",
+        0, 100, love.graphics.getWidth(), "center")
+
+    love.graphics.printf("IP:PORT NUMBER",
+        0, 150, love.graphics.getWidth(), "center")
+
+    love.graphics.printf("e.g. 255.255.255.255:5000",
+        0, 200, love.graphics.getWidth(), "center")
+
     -- textbox
     -- set the text color to white
-    love.graphics.setColor(1, 1, 1) 
+    love.graphics.setColor(1, 1, 1)
     love.graphics.rectangle("line", box.x, box.y, box.w, box.h)
     love.graphics.setScissor(box.x + 1, box.y + 5, box.w - 2, box.h - 2) -- wrap
     -- text
@@ -74,7 +84,6 @@ end
 function love.textinput(t)
     if t:match("[0-9%./:]") then
         text = text .. t
-        
     end
 end
 
