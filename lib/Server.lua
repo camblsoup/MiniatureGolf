@@ -1,10 +1,13 @@
 local Server = {}
+
+local socket = require("socket")
+
 Server.__index = Server
 
-local GolfBall = require("classes/GolfBall")
-local Obstacle = require("classes/Obstacle")
-local Goal = require("classes/Goal")
-local levels = require("levels")
+local GolfBall = require("../classes/GolfBall")
+local Obstacle = require("../classes/Obstacle")
+local Goal = require("../classes/Goal")
+local levels = require("../levels")
 
 function Server.new() -- load
     local self = setmetatable({}, Server)
@@ -12,7 +15,7 @@ function Server.new() -- load
     -- Server state variables
     self.level_index = 1
     self.clients = {}
-    self.current_shooter = 1
+    self.current_player = 1 -- Current player doesn't currently change
     self.obstacles_data = {}
     self.obstacles = {}
     self.goal = nil
