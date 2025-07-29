@@ -1,7 +1,7 @@
 local GolfBall = {}
 GolfBall.__index = GolfBall
 
-local VELOCITY_DECREASE = 0.98 -- Decrease velocity over time to simulate friction
+local VELOCITY_DECREASE = 0.5 -- Decrease velocity over time to simulate friction
 local colors = {
     {1, 0, 0},
     {0, 1, 0},

@@ -37,17 +37,18 @@ function Client.update(dt)
 end
 
 function Client.draw()
-    love.graphics.print("\nCurrent Client: " .. Client.player_id, 10, 10)
+    Client.goal:draw()
+    for _, obstacle in ipairs(Client.obstacles) do
+        obstacle:draw()
+    end
+    
     Client.golf_ball:display()
     if Client.player.is_aiming then
         Client.player:display_aim(Client.golf_ball.body:getX(), Client.golf_ball.body:getY())
     end
 
-    Client.goal:draw()
-    for _, obstacle in ipairs(Client.obstacles) do
-        obstacle:draw()
-    end
-
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print("\nCurrent Client: " .. Client.player_id, 10, 10)
     server:draw() -- Remove once server stands on its own
 end
 
@@ -66,18 +67,23 @@ function Client.keypressed(key)
 end
 
 function Client.generate_level()
+    local screen_width = love.graphics.getWidth()
+    local screen_height = love.graphics.getHeight()
+
     Client.game_world = love.physics.newWorld(0, 0, true)
     Client.obstacles_data = server.obstacles_data
     
     local golf_ball_data = Client.obstacles_data[1]
     local goal_data = Client.obstacles_data[2]
-    Client.golf_ball = GolfBall.new(Client.game_world, golf_ball_data.x, golf_ball_data.y, 10)
-    Client.goal = Goal.new(Client.game_world, goal_data.x, goal_data.y)
+    Client.golf_ball = GolfBall.new(Client.game_world, screen_width * golf_ball_data.x, screen_height * golf_ball_data.y, 10)
+    Client.goal = Goal.new(Client.game_world, screen_width * goal_data.x, screen_height * goal_data.y)
 
     Client.obstacles = {}
+    local screen_width = love.graphics.getWidth()
+    local screen_height = love.graphics.getHeight()
     for i = 3, #Client.obstacles_data do
         local obstacle_data = Client.obstacles_data[i]
-        table.insert(Client.obstacles, Obstacle.new(Client.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height))
+        table.insert(Client.obstacles, Obstacle.new(Client.game_world, screen_width * obstacle_data.x, screen_height * obstacle_data.y, screen_width * obstacle_data.width, screen_height * obstacle_data.height))
     end
 end
 

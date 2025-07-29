@@ -13,7 +13,7 @@ function Obstacle.new(world, x, y, width, height)
 end
 
 function Obstacle:draw()
-    love.graphics.setColor(1, 1, 1)
+    love.graphics.setColor(0.5, 0.5, 0.5)
     love.graphics.polygon("fill", self.body:getWorldPoints(self.shape:getPoints()))
 end
 

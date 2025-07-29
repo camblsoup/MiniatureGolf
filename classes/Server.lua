@@ -41,6 +41,7 @@ function Server:update(dt)
 end
 
 function Server:draw()
+    love.graphics.setColor(1, 1, 1)
     love.graphics.print("Server Current Shooter: " .. self.current_shooter, 10, 10)
     love.graphics.print("\n\nCurrent Shots: " .. self.current_shots, 10, 30)
     love.graphics.print("\n\n\nHigh Score: " .. self.high_score, 10, 50)
@@ -48,19 +49,22 @@ function Server:draw()
 end
 
 function Server:generate_level()
+    local screen_width = love.graphics.getWidth()
+    local screen_height = love.graphics.getHeight()
+
     self.game_world = love.physics.newWorld(0, 0, true)
     self.obstacles_data = levels[self.level_index]
 
     local golf_ball_data = self.obstacles_data[1]
     local goal_data = self.obstacles_data[2]
-    self.golf_ball = GolfBall.new(self.game_world, golf_ball_data.x, golf_ball_data.y, 10, true)
-    self.goal = Goal.new(self.game_world, goal_data.x, goal_data.y)
+    self.golf_ball = GolfBall.new(self.game_world, screen_width * golf_ball_data.x, screen_height * golf_ball_data.y, 10, true)
+    self.goal = Goal.new(self.game_world, screen_width * goal_data.x, screen_height * goal_data.y)
 
     self.obstacles = {}
     for i = 3, #self.obstacles_data do
         local obstacle_data = self.obstacles_data[i]
         table.insert(self.obstacles,
-            Obstacle.new(self.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height))
+            Obstacle.new(self.game_world, screen_width * obstacle_data.x, screen_height * obstacle_data.y, screen_width * obstacle_data.width, screen_height * obstacle_data.height))
     end
 
     for _, client in ipairs(self.clients) do
