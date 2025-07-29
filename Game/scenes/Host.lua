@@ -9,6 +9,9 @@ local width, height = love.graphics.getDimensions()
 -------------------------------------------------------------
 -- load
 function HostScene.load()
+    local networkThread
+    love.thread.newThread("../lib/Server.lua")
+    love.thread:start()
     HostScene.buttons = {
         -- start game
         start = {
@@ -16,7 +19,7 @@ function HostScene.load()
             x = 0,
             y = height - 100,
             action = function()
-                SM.loadScene("Client")
+                SM.loadScene("Game")
             end
         },
         -- return to main menu
@@ -40,7 +43,6 @@ function HostScene.load()
             button.height = 50
             button.x = (love.graphics.getWidth() - button.width) / 2
         end
-        
     end
 end
 

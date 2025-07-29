@@ -12,7 +12,7 @@ local Player = require("classes/Player")
 local GolfBall = require("classes/GolfBall")
 local Obstacle = require("classes/Obstacle")
 local Goal = require("classes/Goal")
-local Server = require("classes/Server")
+local Server = require("lib.Server")
 
 local server = nil
 

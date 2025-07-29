@@ -1,4 +1,3 @@
-package.path = package.path .. ";./?.lua"
 local Server = require("lib/Server")
 local server
 

@@ -14,7 +14,7 @@ function Server.start()
 end
 
 function Server.listen()
-    while true do
+    while not Server.game_start do
         local client = Server:accept()
         if client then
             client:settimeout(0)
