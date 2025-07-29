@@ -25,6 +25,15 @@ function JoinScene.load()
             action = function()
                 SM.loadScene("MainMenu")
             end
+        },
+
+        join = {
+            img = love.graphics.newImage("assets/img/joinButton2.png"),
+            x = 0,
+            y = 450,
+            action = function()
+                SM.loadScene("Joined") -- ensure that the user inputs a valid network
+            end
         }
     }
     for name, button in pairs(JoinScene.buttons) do
