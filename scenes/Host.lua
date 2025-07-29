@@ -16,7 +16,7 @@ function HostScene.load()
             x = 0,
             y = height - 100,
             action = function()
-                SM.loadScene("Start")
+                SM.loadScene("Client")
             end
         },
         -- return to main menu
@@ -56,12 +56,6 @@ function HostScene.IP()
 
     love.graphics.printf("Your friends will connect with IPv4 address!",
         0, 200, love.graphics.getWidth(), "center")
-end
-
--------------------------------------------------------------
--- START BUTTON
-function HostScene.startButton()
-
 end
 
 -------------------------------------------------------------

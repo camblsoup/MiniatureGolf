@@ -9,7 +9,7 @@ function love.load()
     server = Server.new()
 
     love.physics.setMeter(30)
-    SM.loadScene("Client")
+    SM.loadScene("MainMenu")
 end
 
 function love.update(dt)
@@ -36,4 +36,8 @@ end
 
 function love.mousereleased(x, y, button)
     SM.mousereleased(x, y, button)
+end
+
+function love.keypressed(key)
+    SM.keypressed(key)
 end

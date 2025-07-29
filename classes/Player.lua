@@ -1,7 +1,7 @@
 local Player = {}
 Player.__index = Player
 
-local FORCE_SCALE = 100 -- Scale up the force applied to the golf ball
+local FORCE_SCALE = 150 -- Scale up the force applied to the golf ball
 local VIRTUAL_WIDTH = 192
 local VIRTUAL_HEIGHT = 108
 
@@ -63,7 +63,7 @@ function Player:aim(mouse_x, mouse_y, golf_ball)
 end
 
 function Player:display_aim(golf_ball_x, golf_ball_y)
-    love.graphics.setColor(1, 0, 0)
+    love.graphics.setColor(1, 1, 1)
     love.graphics.line(self.mouse_x, self.mouse_y, golf_ball_x, golf_ball_y)
 
     love.graphics.setColor(1, 1, 1, 1)
