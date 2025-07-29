@@ -4,7 +4,7 @@ local SM = require("lib/sceneManager")
 
 function love.load()
     love.physics.setMeter(30)
-    SM.loadScene("Client")
+    SM.loadScene("MainMenu")
 end
 
 function love.update(dt)
