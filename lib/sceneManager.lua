@@ -63,10 +63,4 @@ function SceneManager.mousereleased(x, y, button)
     end
 end
 
-function SceneManager.startServer(server)
-    if (SceneManager.currentScene and SceneManager.currentScene.startServer) then
-        SceneManager.currentScene.startServer(server)
-    end
-end
-
 return SceneManager

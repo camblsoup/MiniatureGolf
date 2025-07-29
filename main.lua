@@ -1,5 +1,5 @@
 package.path = package.path .. ";./?.lua"
-local Server = require("classes/Server")
+local Server = require("lib/Server")
 local server
 
 
@@ -14,14 +14,14 @@ end
 
 function love.update(dt)
     if server and server.network_thread then
-        local success, message = pcall(function() 
-            return server.network_thread:getMessage() 
+        local success, message = pcall(function()
+            return server.network_thread:getMessage()
         end)
         if success and message then
             print("Thread message:", message)
         end
     end
-    
+
     server:update(dt)
     SM.update(dt)
 end
