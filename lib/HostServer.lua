@@ -37,18 +37,20 @@ function Server.listen()
 end
 
 function Server.play()
-    for i = #Server.clients, 1, -1 do
-        local clientObj = Server.clients[i]
-        local data, err = clientObj.socket:receive()
+    while true do
+        for i = #Server.clients, 1, -1 do
+            local clientObj = Server.clients[i]
+            local data, err = clientObj.socket:receive()
 
-        if data then
-            print("Received from client", clientObj.id, ":", data)
+            if data then
+                print("Received from client", clientObj.id, ":", data)
 
-            clientObj.socket:send("ECHO: " .. data)
-        elseif err == "closed" then
-            print("Client", clientObj.id, "disconnected")
-            clientObj.socket:close()
-            table.remove(Server.clients, i)
+                clientObj.socket:send("ECHO: " .. data)
+            elseif err == "closed" then
+                print("Client", clientObj.id, "disconnected")
+                clientObj.socket:close()
+                table.remove(Server.clients, i)
+            end
         end
     end
 end
