@@ -5,6 +5,15 @@ local Server = {
     clients = nil
 }
 
+local game_state = {
+    ball_x = 0,
+    ball_y = 0,
+    level = 1,
+    scores = {},
+    game_started = false,
+    turn = nil
+}
+
 function Server.start()
     Server.instance = socket.bind("*", 12345)
     Server.instance:settimeout(0)
@@ -20,13 +29,17 @@ function Server.listen()
             client:settimeout(0)
             local clientObj = {
                 socket = client,
-                id = #clients
+                id = #Server.clients + 1,
+                ready = false
             }
             table.insert(Server.clients, clientObj)
             print("New client connected! ID:", clientObj.id)
 
             -- Send welcome message
             client:send("WELCOME:Client " .. clientObj.id .. "\n")
+            client:send("LEVEL:1\n")
+            client:send("READY:false\n")
+            client:send("TURN:nil\n")
         end
 
         if (#Server.clients >= 4) then

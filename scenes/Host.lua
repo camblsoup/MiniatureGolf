@@ -7,15 +7,34 @@ local HostScene = {
 local fontIP = love.graphics.newFont("assets/dogicapixelbold.ttf", 20)
 local width, height = love.graphics.getDimensions()
 -------------------------------------------------------------
+
+-- creating a new thread to start a server
+function start_thread_server()
+    local server = require("lib/HostServer")
+    network_thread = love.thread.newThread("HostServer.lua")
+    network_thread:start()
+end
+
 -- load
 function HostScene.load()
     HostScene.buttons = {
-        -- start game
+        
+        join = {
+           img = love.graphics.newImage("assets/img/joinButton.png"),
+            x = 0,
+            y = height - 50,
+            action = function()
+                SM.loadScene("Client")
+            end
+        }
+
+        -- start game and server thread
         start = {
-            img = love.graphics.newImage("assets/img/startButton.png"),
+            img = love.graphics.newImage("assets/img/hostButton.png"),
             x = 0,
             y = height - 100,
             action = function()
+                start_thread_server()
                 SM.loadScene("Client")
             end
         },
