@@ -10,8 +10,8 @@ local width, height = love.graphics.getDimensions()
 -- load
 function HostScene.load()
     local networkThread
-    love.thread.newThread("../lib/Server.lua")
-    love.thread:start()
+    local hostThread = love.thread.newThread("/lib/Server.lua")
+    hostThread:start()
     HostScene.buttons = {
         -- start game
         start = {

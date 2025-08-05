@@ -9,6 +9,10 @@ local Client = {
     goal = nil,
     golf_balls = {},
     current_ball_id = 0,
+
+    -- scoreboard show/hide buttons
+    scoreboard_buttons = {},
+    is_scoreboard_visible = true,
 }
 
 local GolfBall = require("classes/GolfBall")
@@ -18,11 +22,40 @@ local Server = require("lib/Server")
 
 local server = nil
 
+-- scoreboard variables
+local scoreboard_font = love.graphics.newFont("assets/dogicapixelbold.ttf", 15)
+
+local scoreboard_posX = love.graphics.getWidth() - 200
+local scoreboard_posY = 20
+local scoreboard_width = 175
+local scoreboard_height = 200
+local button_width = 75
+local button_height = 20
+
 function Client.load()
     server = Server.new()
     table.insert(server.clients, Client)
     Client.new_world()
     -- server:generate_level()
+
+    Client.scoreboard_buttons = {
+        show = {
+            img = love.graphics.newImage("assets/img/showButton.png"),
+            x = scoreboard_posX + (scoreboard_width / 2),
+            y = scoreboard_posY + 10,
+            width = button_width,
+            height = button_height,
+            action = Client.ShowScoreboard
+        },
+        hide = {
+            img = love.graphics.newImage("assets/img/hideButton.png"),
+            x = scoreboard_posX + (scoreboard_width / 2),
+            y = scoreboard_posY + scoreboard_height + 10,
+            width = button_width,
+            height = button_height,
+            action = Client.HideScoreboard
+        }
+    }
 end
 
 function Client.update(dt)
@@ -36,7 +69,8 @@ function Client.update(dt)
         if data_type == "setup" then
             Client.golf_balls = {}
             for _, golf_ball in ipairs(data.golf_balls) do
-                local golf_ball = GolfBall.new(Client.game_world, golf_ball.ball_id, golf_ball.body:getX(), golf_ball.body:getY())
+                local golf_ball = GolfBall.new(Client.game_world, golf_ball.ball_id, golf_ball.body:getX(),
+                    golf_ball.body:getY())
                 table.insert(Client.golf_balls, golf_ball)
             end
         end
@@ -92,7 +126,7 @@ function Client.draw()
     for _, obstacle in ipairs(Client.obstacles) do
         obstacle:draw()
     end
-    
+
     for _, golf_ball in ipairs(Client.golf_balls) do
         golf_ball:display()
     end
@@ -102,6 +136,54 @@ function Client.draw()
 
     love.graphics.setColor(1, 1, 1)
     love.graphics.print("\nCurrent Client: " .. Client.client_id, 10, 10)
+
+    -- if the scoreboard is visible, draw it
+    if Client.is_scoreboard_visible == true then
+        Client.Scoreboard()
+    end
+
+    local button = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
+    love.graphics.draw(button.img, button.x, button.y, 0,
+        button.width / button.img:getWidth(), button.height / button.img:getHeight())
+end
+
+-- scoreboard function
+function Client.Scoreboard()
+    love.graphics.setFont(scoreboard_font)
+
+    -- black background
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+
+    -- scoreboard text
+    love.graphics.setColor(255, 255, 255) -- Sets the drawing color to red
+    love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+
+    love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
+
+    for i = 1, 4 do
+        local padding = 20
+        local next_height = padding + 40 * i
+        love.graphics.print("Client", scoreboard_posX + 10, next_height)
+        love.graphics.print(":", scoreboard_posX + 110, next_height)
+
+        love.graphics.print(i, scoreboard_posX + 95, next_height)
+        -- TODO: print the scores
+        love.graphics.print("0", scoreboard_posX + 120, next_height)
+    end
+end
+
+------------------------------------------------------------------------------------
+-- show the scoreboard
+function Client.ShowScoreboard()
+    if Client.is_scoreboard_visible == false then
+        Client.is_scoreboard_visible = true
+    end
+end
+
+-- hide the scoreboard
+function Client.HideScoreboard()
+    Client.is_scoreboard_visible = false
 end
 
 function Client.mousereleased(x, y, button)
@@ -128,10 +210,25 @@ end
 function Client.receive_data(pipeline)
     Client.data_received = pipeline
 end
+
 -- Once we have an actual server-client architecture, this will be removed (Client id should not ever change)
 function Client.keypressed(key)
     if key == "q" then
         Client.client_id = Client.client_id % 4 + 1
+    end
+end
+
+function Client.mousepressed(x, y, button)
+    -- left click
+    if button == 1 then
+        local btn = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
+        local img_w = btn.img:getWidth()
+        local img_h = btn.img:getHeight()
+
+        if x > btn.x and x < btn.x + img_w and
+            y > btn.y and y < btn.y + img_h then
+            btn.action()
+        end
     end
 end
 
@@ -141,10 +238,10 @@ function Client.new_world()
     Client.obstacles = {}
     local width = love.graphics.getWidth()
     local height = love.graphics.getHeight()
-    table.insert(Client.obstacles, Obstacle.new(Client.game_world, 0, height/2, 10, height)) -- Left wall
-    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width, height/2, 10, height)) -- Right wall
-    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width/2, 0, width, 10)) -- Top wall
-    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width/2, height, width, 10)) -- Bottom wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, 0, height / 2, 10, height))     -- Left wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width, height / 2, 10, height)) -- Right wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width / 2, 0, width, 10))       -- Top wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width / 2, height, width, 10))  -- Bottom wall
 end
 
 -- function Client.generate_level()
@@ -153,7 +250,7 @@ end
 
 --     Client.game_world = love.physics.newWorld(0, 0, true)
 --     Client.obstacles_data = server.obstacles_data
-    
+
 --     local golf_ball_data = Client.obstacles_data[1]
 --     local goal_data = Client.obstacles_data[2]
 --     Client.golf_ball = GolfBall.new(Client.game_world, screen_width * golf_ball_data.x, screen_height * golf_ball_data.y, 10)
