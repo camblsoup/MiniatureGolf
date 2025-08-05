@@ -18,6 +18,8 @@ local Server = require("lib/Server")
 
 local server = nil
 
+local scoreboard_font = love.graphics.newFont("assets/dogicapixelbold.ttf", 15)
+
 function Client.load()
     server = Server.new()
     table.insert(server.clients, Client)
@@ -37,7 +39,8 @@ function Client.update(dt)
         if data_type == "setup" then
             Client.golf_balls = {}
             for _, golf_ball in ipairs(data.golf_balls) do
-                local golf_ball = GolfBall.new(Client.game_world, golf_ball.ball_id, golf_ball.body:getX(), golf_ball.body:getY())
+                local golf_ball = GolfBall.new(Client.game_world, golf_ball.ball_id, golf_ball.body:getX(),
+                    golf_ball.body:getY())
                 table.insert(Client.golf_balls, golf_ball)
             end
             -- Client.goal = Goal.new(Client.game_world, new_server_data.data.goal.x, new_server_data.data.goal.y)
@@ -89,7 +92,7 @@ function Client.draw()
     -- for _, obstacle in ipairs(Client.obstacles) do
     --     obstacle:draw()
     -- end
-    
+
     for _, golf_ball in ipairs(Client.golf_balls) do
         golf_ball:display()
     end
@@ -99,6 +102,28 @@ function Client.draw()
 
     love.graphics.setColor(1, 1, 1)
     love.graphics.print("\nCurrent Client: " .. Client.client_id, 10, 10)
+
+    -- scoreboard
+    love.graphics.setFont(scoreboard_font)
+
+    local scoreboard_posX = love.graphics.getWidth() - 200
+    local scoreboard_posY = 20
+    local scoreboard_width = 175
+    local scoreboard_height = 200
+
+    love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+    love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
+
+    for i = 1, 4 do
+        local padding = 20
+        local next_height = padding + 40 * i
+        love.graphics.print("Client", scoreboard_posX + 10, next_height)
+        love.graphics.print(":", scoreboard_posX + 110, next_height)
+
+        love.graphics.print(i, scoreboard_posX + 95, next_height)
+        -- TODO: print the scores
+        love.graphics.print("X", scoreboard_posX + 120, next_height)
+    end
 end
 
 function Client.mousereleased(x, y, button)
@@ -125,6 +150,7 @@ end
 function Client.receive_data(pipeline)
     Client.data_received = pipeline
 end
+
 -- Once we have an actual server-client architecture, this will be removed (Client id should not ever change)
 function Client.keypressed(key)
     if key == "q" then
@@ -138,7 +164,7 @@ end
 
 --     Client.game_world = love.physics.newWorld(0, 0, true)
 --     Client.obstacles_data = server.obstacles_data
-    
+
 --     local golf_ball_data = Client.obstacles_data[1]
 --     local goal_data = Client.obstacles_data[2]
 --     Client.golf_ball = GolfBall.new(Client.game_world, screen_width * golf_ball_data.x, screen_height * golf_ball_data.y, 10)
@@ -152,5 +178,7 @@ end
 --         table.insert(Client.obstacles, Obstacle.new(Client.game_world, screen_width * obstacle_data.x, screen_height * obstacle_data.y, screen_width * obstacle_data.width, screen_height * obstacle_data.height))
 --     end
 -- end
+
+
 
 return Client
