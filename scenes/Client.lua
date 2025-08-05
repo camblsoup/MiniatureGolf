@@ -9,6 +9,9 @@ local Client = {
     goal = nil,
     golf_balls = {},
     current_ball_id = 0,
+
+    -- scoreboard show/hide buttons
+    scoreboard_buttons = {}
 }
 
 local GolfBall = require("classes/GolfBall")
@@ -19,6 +22,7 @@ local Server = require("lib/Server")
 local server = nil
 
 local scoreboard_font = love.graphics.newFont("assets/dogicapixelbold.ttf", 15)
+
 
 function Client.load()
     server = Server.new()
@@ -103,7 +107,10 @@ function Client.draw()
     love.graphics.setColor(1, 1, 1)
     love.graphics.print("\nCurrent Client: " .. Client.client_id, 10, 10)
 
-    -- scoreboard
+    Client.Scoreboard()
+end
+
+function Client.Scoreboard()
     love.graphics.setFont(scoreboard_font)
 
     local scoreboard_posX = love.graphics.getWidth() - 200
@@ -122,9 +129,41 @@ function Client.draw()
 
         love.graphics.print(i, scoreboard_posX + 95, next_height)
         -- TODO: print the scores
-        love.graphics.print("X", scoreboard_posX + 120, next_height)
+        love.graphics.print("0", scoreboard_posX + 120, next_height)
+    end
+
+    Client.scoreboard_buttons = {
+        show = {
+            img = love.graphics.newImage("/assets/img/showButton.png"),
+            x = 10,
+            y = 10,
+            action = function()
+                Client.ShowScoreboard()
+            end
+        },
+        hide = {
+            img = love.graphics.newImage("/assets/img/hideButton.png"),
+            x = 10,
+            y = 10,
+            action = function()
+                Client.ShowScoreboard()
+            end
+        }
+    }
+
+    for _, button in pairs(Client.scoreboard_buttons) do
+        button.width = 100
+        button.height = 20
     end
 end
+
+function Client.ShowScoreboard()
+end
+
+function Client.HideScoreboard()
+end
+
+---------------------------------------------------
 
 function Client.mousereleased(x, y, button)
     if button ~= 1 then
@@ -179,6 +218,18 @@ end
 --     end
 -- end
 
-
+function Client.mousepressed(x, y, button)
+    -- left click
+    if button == 1 then
+        for _, btn in pairs(Client.buttons) do
+            -- find position
+            if x > btn.x and x < btn.x + btn.width and
+                y > btn.y and y < btn.y + btn.height then
+                -- button function
+                btn.action()
+            end
+        end
+    end
+end
 
 return Client
