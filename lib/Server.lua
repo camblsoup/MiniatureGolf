@@ -9,44 +9,18 @@ local Obstacle = require("../classes/Obstacle")
 local Goal = require("../classes/Goal")
 local levels = require("../levels")
 
-local NUM_BALLS = 16
+local NUM_BALLS = 4
 
 function Server.new() -- load
     local self = setmetatable({}, Server)
 
     -- self.level_index = 1
     -- self.obstacles_data = {}
-    self.obstacles = {}
     self.clients = {}
-    self.points = {0, 0, 0, 0}
     self.data_to_send = {}
     self.data_received = {}
     
-    self.game_world = love.physics.newWorld(0, 0, true)
-    self.goal = Goal.new(self.game_world, love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
-    self.golf_balls = {}
-    self.num_golf_balls = NUM_BALLS
-
-    for i = 1, NUM_BALLS do
-        local x = math.random(love.graphics.getWidth() * 0.1, love.graphics.getWidth() * 0.9)
-        local y = math.random(love.graphics.getHeight() * 0.1, love.graphics.getHeight() * 0.9)
-        local new_golf_ball = GolfBall.new(self.game_world, i, x, y, true)
-        table.insert(self.golf_balls, new_golf_ball)
-    end
-    self.obstacles = {}
-    local width = love.graphics.getWidth()
-    local height = love.graphics.getHeight()
-    table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height/2, 10, height)) -- Left wall
-    table.insert(self.obstacles, Obstacle.new(self.game_world, width, height/2, 10, height)) -- Right wall
-    table.insert(self.obstacles, Obstacle.new(self.game_world, width/2, 0, width, 10)) -- Top wall
-    table.insert(self.obstacles, Obstacle.new(self.game_world, width/2, height, width, 10)) -- Bottom wall
-    self.data_to_send = {
-        type = "setup",
-        data = {
-            golf_balls = self.golf_balls,
-            obstacles = self.obstacles,
-        }
-    }
+    self:new_world()
 
     return self
 end
@@ -104,20 +78,54 @@ function Server:update(dt)
             self.golf_balls[golf_ball.ball_id].scored = true
             self.golf_balls[golf_ball.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
             self.num_golf_balls = self.num_golf_balls - 1
-            self.points[golf_ball.current_shooter_id] = self.points[golf_ball.current_shooter_id] + 1
-            self.data_to_send = {
-                type = "goal_reached",
-                data = {
-                    ball_id = golf_ball.ball_id,
-                    client_scored = golf_ball.current_shooter_id,
+            if self.num_golf_balls <= 0 then
+                self:new_world()
+            else
+                self.points[golf_ball.current_shooter_id] = self.points[golf_ball.current_shooter_id] + 1
+                self.data_to_send = {
+                    type = "goal_reached",
+                    data = {
+                        ball_id = golf_ball.ball_id,
+                        client_scored = golf_ball.current_shooter_id,
+                    }
                 }
-            }
+            end
         end
     end
 end
 
 function Server:receive_data(client_id, pipeline)
     self.data_received[client_id] = pipeline
+end
+
+function Server:new_world()
+    self.obstacles = {}
+    self.points = {0, 0, 0, 0}
+    self.game_world = love.physics.newWorld(0, 0, true)
+    self.goal = Goal.new(self.game_world, love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
+    self.golf_balls = {}
+    self.num_golf_balls = NUM_BALLS
+
+    for i = 1, NUM_BALLS do
+        local x = math.random(love.graphics.getWidth() * 0.1, love.graphics.getWidth() * 0.9)
+        local y = math.random(love.graphics.getHeight() * 0.1, love.graphics.getHeight() * 0.9)
+        local new_golf_ball = GolfBall.new(self.game_world, i, x, y, true)
+        table.insert(self.golf_balls, new_golf_ball)
+    end
+    self.obstacles = {}
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
+    table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height/2, 10, height)) -- Left wall
+    table.insert(self.obstacles, Obstacle.new(self.game_world, width, height/2, 10, height)) -- Right wall
+    table.insert(self.obstacles, Obstacle.new(self.game_world, width/2, 0, width, 10)) -- Top wall
+    table.insert(self.obstacles, Obstacle.new(self.game_world, width/2, height, width, 10)) -- Bottom wall
+    self.data_to_send = {
+        type = "setup",
+        data = {
+            golf_balls = self.golf_balls,
+            obstacles = self.obstacles,
+        }
+    }
 end
 
 -- function Server:generate_level()

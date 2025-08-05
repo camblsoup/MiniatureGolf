@@ -21,15 +21,7 @@ local server = nil
 function Client.load()
     server = Server.new()
     table.insert(server.clients, Client)
-    Client.game_world = love.physics.newWorld(0, 0, true)
-    Client.goal = Goal.new(Client.game_world, love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
-    Client.obstacles = {}
-    local width = love.graphics.getWidth()
-    local height = love.graphics.getHeight()
-    table.insert(Client.obstacles, Obstacle.new(Client.game_world, 0, height/2, 10, height)) -- Left wall
-    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width, height/2, 10, height)) -- Right wall
-    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width/2, 0, width, 10)) -- Top wall
-    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width/2, height, width, 10)) -- Bottom wall
+    Client.new_world()
     -- server:generate_level()
 end
 
@@ -65,6 +57,10 @@ function Client.update(dt)
         if data_type == "goal_reached" then
             Client.golf_balls[data.ball_id].scored = true
             Client.golf_balls[data.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
+        end
+
+        if data_type == "game_over" then
+            Client.new_world()
         end
     end
 
@@ -137,6 +133,18 @@ function Client.keypressed(key)
     if key == "q" then
         Client.client_id = Client.client_id % 4 + 1
     end
+end
+
+function Client.new_world()
+    Client.game_world = love.physics.newWorld(0, 0, true)
+    Client.goal = Goal.new(Client.game_world, love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
+    Client.obstacles = {}
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, 0, height/2, 10, height)) -- Left wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width, height/2, 10, height)) -- Right wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width/2, 0, width, 10)) -- Top wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width/2, height, width, 10)) -- Bottom wall
 end
 
 -- function Client.generate_level()
