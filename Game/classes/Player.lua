@@ -1,9 +1,7 @@
+-- OBSOLETE
+
 local Player = {}
 Player.__index = Player
-
-local FORCE_SCALE = 150 -- Scale up the force applied to the golf ball
-local VIRTUAL_WIDTH = 192
-local VIRTUAL_HEIGHT = 108
 
 function Player.new()
     local self = setmetatable({}, Player)
