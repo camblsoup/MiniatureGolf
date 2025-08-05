@@ -40,7 +40,6 @@ function Client.update(dt)
                 local golf_ball = GolfBall.new(Client.game_world, golf_ball.ball_id, golf_ball.body:getX(), golf_ball.body:getY())
                 table.insert(Client.golf_balls, golf_ball)
             end
-            -- Client.goal = Goal.new(Client.game_world, new_server_data.data.goal.x, new_server_data.data.goal.y)
         end
 
         if data_type == "shoot" then
@@ -58,6 +57,7 @@ function Client.update(dt)
 
         if data_type == "goal_reached" then
             Client.golf_balls[data.ball_id].scored = true
+            Client.golf_balls[data.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
         end
     end
 

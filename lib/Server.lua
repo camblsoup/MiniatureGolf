@@ -95,6 +95,7 @@ function Server:update(dt)
         end
         if self.goal:check_reached(golf_ball.body) then
             self.golf_balls[golf_ball.ball_id].scored = true
+            self.golf_balls[golf_ball.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
             self.num_golf_balls = self.num_golf_balls - 1
             self.points[golf_ball.current_shooter_id] = self.points[golf_ball.current_shooter_id] + 1
             self.data_to_send = {
