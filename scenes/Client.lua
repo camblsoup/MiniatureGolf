@@ -11,7 +11,8 @@ local Client = {
     current_ball_id = 0,
 
     -- scoreboard show/hide buttons
-    scoreboard_buttons = {}
+    scoreboard_buttons = {},
+    is_scoreboard_visible = true,
 }
 
 local GolfBall = require("classes/GolfBall")
@@ -23,6 +24,14 @@ local server = nil
 
 local scoreboard_font = love.graphics.newFont("assets/dogicapixelbold.ttf", 15)
 
+local scoreboard_posX = love.graphics.getWidth() - 200
+local scoreboard_posY = 20
+local scoreboard_width = 175
+local scoreboard_height = 200
+
+local button_width = 75
+local button_height = 20
+
 
 function Client.load()
     server = Server.new()
@@ -30,6 +39,25 @@ function Client.load()
     Client.game_world = love.physics.newWorld(0, 0, true)
     Client.goal = Goal.new(Client.game_world, love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
     -- server:generate_level()
+
+    Client.scoreboard_buttons = {
+        show = {
+            img = love.graphics.newImage("assets/img/showButton.png"),
+            x = scoreboard_posX + (scoreboard_width / 2),
+            y = scoreboard_posY + 10,
+            width = button_width,
+            height = button_height,
+            action = Client.ShowScoreboard
+        },
+        hide = {
+            img = love.graphics.newImage("assets/img/hideButton.png"),
+            x = scoreboard_posX + (scoreboard_width / 2),
+            y = scoreboard_posY + scoreboard_height + 10,
+            width = button_width,
+            height = button_height,
+            action = Client.HideScoreboard
+        }
+    }
 end
 
 function Client.update(dt)
@@ -107,18 +135,29 @@ function Client.draw()
     love.graphics.setColor(1, 1, 1)
     love.graphics.print("\nCurrent Client: " .. Client.client_id, 10, 10)
 
-    Client.Scoreboard()
+    -- if the scoreboard is visible, draw it
+    if Client.is_scoreboard_visible == true then
+        Client.Scoreboard()
+    end
+
+    local button = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
+    love.graphics.draw(button.img, button.x, button.y, 0,
+        button.width / button.img:getWidth(), button.height / button.img:getHeight())
 end
 
+------------------------------------------------------------------------------------
+-- scoreboard function
 function Client.Scoreboard()
     love.graphics.setFont(scoreboard_font)
 
-    local scoreboard_posX = love.graphics.getWidth() - 200
-    local scoreboard_posY = 20
-    local scoreboard_width = 175
-    local scoreboard_height = 200
+    -- black background
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
 
+    -- scoreboard text
+    love.graphics.setColor(255, 255, 255) -- Sets the drawing color to red
     love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+
     love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
 
     for i = 1, 4 do
@@ -131,40 +170,22 @@ function Client.Scoreboard()
         -- TODO: print the scores
         love.graphics.print("0", scoreboard_posX + 120, next_height)
     end
+end
 
-    Client.scoreboard_buttons = {
-        show = {
-            img = love.graphics.newImage("/assets/img/showButton.png"),
-            x = 10,
-            y = 10,
-            action = function()
-                Client.ShowScoreboard()
-            end
-        },
-        hide = {
-            img = love.graphics.newImage("/assets/img/hideButton.png"),
-            x = 10,
-            y = 10,
-            action = function()
-                Client.ShowScoreboard()
-            end
-        }
-    }
-
-    for _, button in pairs(Client.scoreboard_buttons) do
-        button.width = 100
-        button.height = 20
+------------------------------------------------------------------------------------
+-- show the scoreboard
+function Client.ShowScoreboard()
+    if Client.is_scoreboard_visible == false then
+        Client.is_scoreboard_visible = true
     end
 end
 
-function Client.ShowScoreboard()
-end
-
+-- hide the scoreboard
 function Client.HideScoreboard()
+    Client.is_scoreboard_visible = false
 end
 
----------------------------------------------------
-
+------------------------------------------------------------------------------------
 function Client.mousereleased(x, y, button)
     if button ~= 1 then
         return
@@ -221,13 +242,13 @@ end
 function Client.mousepressed(x, y, button)
     -- left click
     if button == 1 then
-        for _, btn in pairs(Client.buttons) do
-            -- find position
-            if x > btn.x and x < btn.x + btn.width and
-                y > btn.y and y < btn.y + btn.height then
-                -- button function
-                btn.action()
-            end
+        local btn = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
+        local img_w = btn.img:getWidth()
+        local img_h = btn.img:getHeight()
+
+        if x > btn.x and x < btn.x + img_w and
+            y > btn.y and y < btn.y + img_h then
+            btn.action()
         end
     end
 end
