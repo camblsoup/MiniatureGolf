@@ -5,7 +5,7 @@ local Client = {
 
     game_world = nil,
     -- obstacles_data = {},
-    -- obstacles = {},
+    obstacles = {},
     goal = nil,
     golf_balls = {},
     current_ball_id = 0,
@@ -23,6 +23,13 @@ function Client.load()
     table.insert(server.clients, Client)
     Client.game_world = love.physics.newWorld(0, 0, true)
     Client.goal = Goal.new(Client.game_world, love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
+    Client.obstacles = {}
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, 0, height/2, 10, height)) -- Left wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width, height/2, 10, height)) -- Right wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width/2, 0, width, 10)) -- Top wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width/2, height, width, 10)) -- Bottom wall
     -- server:generate_level()
 end
 
@@ -86,9 +93,9 @@ end
 
 function Client.draw()
     Client.goal:draw()
-    -- for _, obstacle in ipairs(Client.obstacles) do
-    --     obstacle:draw()
-    -- end
+    for _, obstacle in ipairs(Client.obstacles) do
+        obstacle:draw()
+    end
     
     for _, golf_ball in ipairs(Client.golf_balls) do
         golf_ball:display()

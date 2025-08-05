@@ -16,7 +16,7 @@ function Server.new() -- load
 
     -- self.level_index = 1
     -- self.obstacles_data = {}
-    -- self.obstacles = {}
+    self.obstacles = {}
     self.clients = {}
     self.points = {0, 0, 0, 0}
     self.data_to_send = {}
@@ -28,16 +28,23 @@ function Server.new() -- load
     self.num_golf_balls = NUM_BALLS
 
     for i = 1, NUM_BALLS do
-        local x = math.random(0, love.graphics.getWidth())
-        local y = math.random(0, love.graphics.getHeight())
+        local x = math.random(love.graphics.getWidth() * 0.1, love.graphics.getWidth() * 0.9)
+        local y = math.random(love.graphics.getHeight() * 0.1, love.graphics.getHeight() * 0.9)
         local new_golf_ball = GolfBall.new(self.game_world, i, x, y, true)
         table.insert(self.golf_balls, new_golf_ball)
     end
+    self.obstacles = {}
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
+    table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height/2, 10, height)) -- Left wall
+    table.insert(self.obstacles, Obstacle.new(self.game_world, width, height/2, 10, height)) -- Right wall
+    table.insert(self.obstacles, Obstacle.new(self.game_world, width/2, 0, width, 10)) -- Top wall
+    table.insert(self.obstacles, Obstacle.new(self.game_world, width/2, height, width, 10)) -- Bottom wall
     self.data_to_send = {
         type = "setup",
         data = {
             golf_balls = self.golf_balls,
-            -- goal = self.goal,
+            obstacles = self.obstacles,
         }
     }
 
