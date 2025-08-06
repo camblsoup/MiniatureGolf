@@ -32,6 +32,9 @@ local scoreboard_height = 200
 local button_width = 75
 local button_height = 20
 
+-- flag
+local flag
+
 function Client.load()
     server = Server.new()
     table.insert(server.clients, Client)
@@ -56,6 +59,8 @@ function Client.load()
             action = Client.HideScoreboard
         }
     }
+
+    flag = love.graphics.newImage("assets/img/flag.png")
 end
 
 function Client.update(dt)
@@ -137,7 +142,7 @@ function Client.draw()
     love.graphics.setColor(1, 1, 1)
     love.graphics.print("\nCurrent Client: " .. Client.client_id, 10, 10)
 
-    -- if the scoreboard is visible, draw it
+    -- Scoreboard
     if Client.is_scoreboard_visible == true then
         Client.Scoreboard()
     end
@@ -145,6 +150,13 @@ function Client.draw()
     local button = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
     love.graphics.draw(button.img, button.x, button.y, 0,
         button.width / button.img:getWidth(), button.height / button.img:getHeight())
+
+    -- Flag
+    local screen_w = love.graphics.getWidth()
+    local screen_h = love.graphics.getHeight()
+    local flag_w = flag:getWidth()
+    local flag_h = flag:getHeight()
+    love.graphics.draw(flag,(screen_w - flag_w) / 2 + 15,(screen_h - flag_h) / 2 - 50)
 end
 
 -- scoreboard function
