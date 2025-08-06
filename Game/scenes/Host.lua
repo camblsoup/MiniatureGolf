@@ -28,7 +28,7 @@ function HostScene.load()
             x = 10,
             y = 10,
             action = function()
-                SM.loadScene("MainMenu")
+                SM.loadScene("HostPort")
             end
         }
     }
