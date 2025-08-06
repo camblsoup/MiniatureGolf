@@ -88,28 +88,6 @@ function GolfBall:aim(client, mouse_x, mouse_y)
 	end
 end
 
-function GolfBall:display()
-	if self.scored then
-		return
-	end
-
-	if self.server_controlled then
-		love.graphics.setLineWidth(3)
-		love.graphics.setColor(0.5, 0.5, 0.5)
-		love.graphics.circle("line", self.body:getX(), self.body:getY(), self.shape:getRadius())
-	else
-		love.graphics.setColor(1, 0, 0, 1)
-		love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
-	end
-
-	if self.is_aiming and not self:isMoving() then
-		love.graphics.setColor(1, 1, 1)
-		love.graphics.line(self.mouse_x, self.mouse_y, self.body:getX(), self.body:getY())
-		love.graphics.setColor(1, 1, 1, 1)
-		love.graphics.print(self.shooting_magnitude)
-	end
-end
-
 function GolfBall:shoot(force, angle)
 	self.is_aiming = false
 	self.rolling = true

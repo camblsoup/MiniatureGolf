@@ -1,123 +1,130 @@
 local SM = require("lib/sceneManager")
+local socket = require("socket")
+local Client = require("lib/Client")
 
 local font = love.graphics.newFont("assets/dogicapixelbold.ttf", 20)
 local width, height = love.graphics.getDimensions()
 local text
 local box = {
-    w = width / 2 + 90,
-    h = 50,
-    x = (width - (width / 2 + 90)) / 2,
-    y = (height - 50) / 2,
-    pad = 10
+	w = width / 2 + 90,
+	h = 50,
+	x = (width - (width / 2 + 90)) / 2,
+	y = (height - 50) / 2,
+	pad = 10,
 }
 local JoinScene = {
-    buttons = {}
+	buttons = {},
 }
 -------------------------------------------------------------
 function JoinScene.load()
-    love.graphics.setFont(font)
-    text = "" or text
-    JoinScene.buttons = {
-        back = {
-            img = love.graphics.newImage("assets/img/backButton.png"),
-            x = 10,
-            y = 10,
-            action = function()
-                SM.loadScene("MainMenu")
-            end
-        },
+	love.graphics.setFont(font)
+	text = "" or text
+	JoinScene.buttons = {
+		back = {
+			img = love.graphics.newImage("assets/img/backButton.png"),
+			x = 10,
+			y = 10,
+			action = function()
+				SM.loadScene("MainMenu")
+			end,
+		},
 
-        join = {
-            img = love.graphics.newImage("assets/img/joinButton2.png"),
-            x = 0,
-            y = 450,
-            action = function()
-                SM.loadScene("Joined") -- ensure that the user inputs a valid network
-            end
-        }
-    }
-    for name, button in pairs(JoinScene.buttons) do
-        -- button size
-        if name == "back" then
-            button.width = 56
-            button.height = 56
-        else
-            button.width = 220
-            button.height = 50
-            button.x = (love.graphics.getWidth() - button.width) / 2
-        end
-    end
+		join = {
+			img = love.graphics.newImage("assets/img/joinButton2.png"),
+			x = 0,
+			y = 450,
+			action = function()
+				print(text)
+				local words = {}
+				for split in string.gmatch(text, "([^:]+)") do
+					table.insert(words, split)
+				end
+				Client.load(words[1], words[2])
+				local ok, err = Client.socket:getpeername()
+				while Client.socket_thread and not ok do
+					ok, err = Client.socket:getpeername()
+					socket.sleep(0.01)
+				end
+				if ok then
+					SM.loadScene("Joined") -- ensure that the user inputs a valid network
+				end
+			end,
+		},
+	}
+	for name, button in pairs(JoinScene.buttons) do
+		-- button size
+		if name == "back" then
+			button.width = 56
+			button.height = 56
+		else
+			button.width = 220
+			button.height = 50
+			button.x = (love.graphics.getWidth() - button.width) / 2
+		end
+	end
 end
 
 -------------------------------------------------------------
 function JoinScene.draw()
-    love.graphics.setFont(font)
-    -- buttons
-    for _, button in pairs(JoinScene.buttons) do
-        love.graphics.draw(button.img,
-            button.x,                               -- x position
-            button.y,                               -- y position
-            0,                                      -- rotation
-            button.width / button.img:getWidth(),   -- x scale
-            button.height / button.img:getHeight()) -- y scale
-    end
+	love.graphics.setFont(font)
+	-- buttons
+	for _, button in pairs(JoinScene.buttons) do
+		love.graphics.draw(
+			button.img,
+			button.x, -- x position
+			button.y, -- y position
+			0, -- rotation
+			button.width / button.img:getWidth(), -- x scale
+			button.height / button.img:getHeight()
+		) -- y scale
+	end
 
-    love.graphics.printf("Join with the host's IP and port number",
-        0, 100, love.graphics.getWidth(), "center")
+	love.graphics.printf("Join with the host's IP and port number", 0, 100, love.graphics.getWidth(), "center")
 
-    love.graphics.printf("IP:PORT NUMBER",
-        0, 150, love.graphics.getWidth(), "center")
+	love.graphics.printf("IP:PORT NUMBER", 0, 150, love.graphics.getWidth(), "center")
 
-    love.graphics.printf("e.g. 255.255.255.255:5000",
-        0, 200, love.graphics.getWidth(), "center")
+	love.graphics.printf("e.g. 255.255.255.255:5000", 0, 200, love.graphics.getWidth(), "center")
 
-    -- textbox
-    -- set the text color to white
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.rectangle("line", box.x, box.y, box.w, box.h)
-    love.graphics.setScissor(box.x + 1, box.y + 5, box.w - 2, box.h - 2) -- wrap
-    -- text
-    love.graphics.printf(
-        text,
-        box.x + box.pad,
-        box.y + box.pad,
-        box.w - box.pad * 2,
-        "left"
-    )
+	-- textbox
+	-- set the text color to white
+	love.graphics.setColor(1, 1, 1)
+	love.graphics.rectangle("line", box.x, box.y, box.w, box.h)
+	love.graphics.setScissor(box.x + 1, box.y + 5, box.w - 2, box.h - 2) -- wrap
+	-- text
+	love.graphics.printf(text, box.x + box.pad, box.y + box.pad, box.w - box.pad * 2, "left")
 
-    love.graphics.setScissor()
+	love.graphics.setScissor()
 end
 
 -------------------------------------------------------------
 -- textbox input for IP
 function love.textinput(t)
-    if t:match("[0-9%./:]") then
-        text = text .. t
-    end
+	if t:match("[0-9%./:]") then
+		text = text .. t
+	end
 end
 
 -------------------------------------------------------------
 -- for the buttons
 function JoinScene.mousepressed(x, y, button)
-    -- left click
-    if button == 1 then
-        for _, btn in pairs(JoinScene.buttons) do
-            -- find position
-            if x > btn.x and x < btn.x + btn.width and
-                y > btn.y and y < btn.y + btn.height then
-                -- button function
-                btn.action()
-            end
-        end
-    end
+	-- left click
+	if button == 1 then
+		for _, btn in pairs(JoinScene.buttons) do
+			-- find position
+			if x > btn.x and x < btn.x + btn.width and y > btn.y and y < btn.y + btn.height then
+				-- button function
+				btn.action()
+			end
+		end
+	end
 end
 
 -------------------------------------------------------------
 -- delete char
 function JoinScene.keypressed(key)
-    if key == "backspace" then
-        text = text:sub(1, -2)
-    end
+	if key == "backspace" then
+		text = text:sub(1, -2)
+	end
 end
 
 return JoinScene

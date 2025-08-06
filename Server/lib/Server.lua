@@ -1,125 +1,216 @@
 local Server = {}
 local socket = require("socket")
-local json = require("json")
+local json = require("lib/json")
 
 local GolfBall = require("../classes/GolfBall")
 local Obstacle = require("../classes/Obstacle")
 local Goal = require("../classes/Goal")
-local levels = require("../levels")
+-- local levels = require("../levels")
+
+local NUM_BALLS = 4
+local FIXED_DT = 1 / 60
 
 function Server.load() -- load
-    Server.level_index = 1
-    Server.clients = {}
-    Server.current_player = 1 -- Current player doesn't currently change
-    Server.obstacles_data = {}
-    Server.obstacles = {}
-    Server.goal = nil
-    Server.golf_ball = nil
-    Server.ball_in_motion = false
+	math.randomseed(os.time() + socket.gettime())
+	-- Server.level_index = 1
+	Server.clients = {}
+	Server.client_sockets = {}
 
-    Server.game_world = love.physics.newWorld(0, 0, true)
-    Server.game_start = false;
+	Server.tick = 0
+	Server.accumulator = 0
 
-    Server.instance = socket.bind("*", 12345)
-    Server.instance:settimeout(0)
-    Server.listen()
+	Server.instance = socket.bind("127.0.0.1", 7777)
+	Server.instance:settimeout(0)
 end
 
 function Server.listen()
-    while not Server.game_start do
-        if (#Server.clients < 4) then
-            local client = Server.instance:accept()
-            if client then
-                client:settimeout(0)
-                local clientObj = {
-                    socket = client,
-                    id = #Server.clients
-                }
-                table.insert(Server.clients, clientObj)
-                print("New client connected! ID:", clientObj.id)
-            end
-        end
-        if Server.clients[1] then
-            local msg = Server.clients[1].socket:receive()
-            if (msg == "start") then
-                Server.game_start = true;
-            end
-        end
-    end
-    Server.play()
-end
-
-function Server.play()
-    while Server.game_start do
-
-    end
+	Server.receive_data()
+	if not Server.clients or #Server.clients < 4 then
+		local client = Server.instance:accept()
+		if client then
+			client:settimeout(0)
+			local clientObj = {
+				socket = client,
+				id = math.random(10, 9999999999),
+			}
+			table.insert(Server.clients, clientObj)
+			table.insert(Server.client_sockets, client)
+			client:send(json.encode({ type = "id", data = { id = clientObj.id } }) .. "\n")
+			print("New client connected! ID:", clientObj.id)
+		end
+	end
 end
 
 function Server:update(dt)
-    if self.game_world then
-        self.game_world:update(dt)
-    end
-
-    if self.ball_in_motion and self.golf_ball then
-        if not self.golf_ball:isMoving() then
-            self.ball_in_motion = false
-            for _, client in ipairs(self.clients) do
-                if client.finish_ball_shoot then
-                    client.finish_ball_shoot()
-                end
-            end
-        end
-    end
-
-    -- safety checks here
-    if self.goal and self.golf_ball then
-        if self.goal:check_reached(self.golf_ball.body) then
-            self:next_level()
-        end
-    end
+	self.accumulator = self.accumulator + dt
+	while self.accumulator >= FIXED_DT do
+		self:fixed_update(FIXED_DT)
+		self.accumulator = self.accumulator - FIXED_DT
+		self.tick = self.tick + 1
+	end
 end
 
-function Server:draw()
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Server Current Shooter: " .. self.current_shooter, 10, 10)
-    love.graphics.print("\n\nCurrent Shots: " .. self.current_shots, 10, 30)
-    love.graphics.print("\n\n\nHigh Score: " .. self.high_score, 10, 50)
-    self.golf_ball:display() -- Testing purposes
+function Server:fixed_update(dt)
+	Server.receive_data()
+	self.game_world:update(dt)
+	for _, golf_ball in ipairs(self.golf_balls) do
+		if golf_ball.rolling and not golf_ball:isMoving() then
+			golf_ball:finish_ball_shoot()
+			Server.send_data_to_all_clients({
+				type = "finish_shoot",
+				data = {
+					ball_id = golf_ball.ball_id,
+					x = golf_ball.body:getX(),
+					y = golf_ball.body:getY(),
+				},
+			})
+		end
+		if self.goal:check_reached(golf_ball.body) then
+			self.golf_balls[golf_ball.ball_id].scored = true
+			self.golf_balls[golf_ball.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
+			self.num_golf_balls = self.num_golf_balls - 1
+			if golf_ball.current_shooter_id >= 10 then
+				self.points[golf_ball.current_shooter_id] = self.points[golf_ball.current_shooter_id] + 1
+			end
+			Server.send_data_to_all_clients({
+				type = "goal_reached",
+				data = {
+					ball_id = golf_ball.ball_id,
+					client_scored = golf_ball.current_shooter_id,
+				},
+			})
+			if self.num_golf_balls <= 0 then
+				self:new_world()
+			end
+		end
+	end
+	if self.tick % 4 == 0 then
+		self.broadcast_state()
+	end
 end
 
-function Server:generate_level()
-    self.game_world = love.physics.newWorld(0, 0, true)
-    self.obstacles_data = levels[self.level_index]
+function Server:new_world()
+	local width = 1000
+	local height = 600
 
-    local golf_ball_data = self.obstacles_data[1]
-    local goal_data = self.obstacles_data[2]
-    self.golf_ball = GolfBall.new(self.game_world, golf_ball_data.x, golf_ball_data.y, 10, { 0, 0, 1 })
-    self.goal = Goal.new(self.game_world, goal_data.x, goal_data.y)
+	self.obstacles = {}
+	self.points = {}
+	for i, client in ipairs(self.clients) do
+		self.points[client.id] = 0
+	end
+	self.game_world = love.physics.newWorld(0, 0, true)
+	self.goal = Goal.new(self.game_world, width / 2, height / 2)
+	self.golf_balls = {}
+	self.num_golf_balls = NUM_BALLS
 
-    self.obstacles = {}
-    for i = 3, #self.obstacles_data do
-        local obstacle_data = self.obstacles_data[i]
-        table.insert(self.obstacles,
-            Obstacle.new(self.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height))
-    end
+	local client_balls_data = {}
 
-    for _, client in ipairs(self.clients) do
-        client.generate_level()
-    end
+	for i = 1, NUM_BALLS do
+		local x = math.random(width * 0.1, width * 0.9)
+		local y = math.random(height * 0.1, height * 0.9)
+		local new_golf_ball = GolfBall.new(self.game_world, i, x, y, true)
+		table.insert(self.golf_balls, new_golf_ball)
+		table.insert(client_balls_data, { ball_id = i, x = x, y = y })
+	end
+	self.obstacles = {}
+	table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height / 2, 10, height)) -- Left wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, width, height / 2, 10, height)) -- Right wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, 0, width, 10)) -- Top wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, height, width, 10)) -- Bottom wall
+	Server.send_data_to_all_clients({
+		type = "setup",
+		data = {
+			golf_balls = client_balls_data,
+		},
+	})
 end
 
-function Server:next_level()
-    self.level_index = self.level_index + 1
-    if self.level_index > #levels then
-        self.level_index = 1
-    end
-    self.game_world:destroy()
-    self:generate_level()
+function Server.broadcast_state()
+	local ball_states = {}
+	for i, ball in ipairs(Server.golf_balls) do
+		table.insert(ball_states, {
+			ball_id = ball.ball_id,
+			x = ball.body:getX(),
+			y = ball.body:getY(),
+			vx = ball.body:getLinearVelocity(),
+			vy = select(2, ball.body:getLinearVelocity()),
+		})
+	end
+	Server.send_data_to_all_clients({
+		type = "state_update",
+		data = {
+			tick = Server.tick,
+			balls = ball_states,
+		},
+	})
 end
 
-function Server:launch_ball(velocity_x, velocity_y)
-    self.golf_ball.body:applyLinearImpulse(velocity_x, velocity_y)
-    self.ball_in_motion = true
+function Server.send_data_to_all_clients(data)
+	local jsonString = json.encode(data)
+	--print("Sending data: " .. jsonString)
+	for i, client in ipairs(Server.clients) do
+		local success, err = client.socket:send(jsonString .. "\n")
+		if not success then
+			table.remove(Server.clients, i)
+		end
+	end
 end
 
-Server.load()
+function Server.receive_data()
+	local readable, _, _ = socket.select(Server.client_sockets, nil, 0)
+	for i, client in ipairs(readable) do
+		local temp_data, err = client:receive("*l")
+		if not temp_data then
+			if err ~= "timeout" then
+				print("Client disconnected or lost:" .. err)
+				for i, client_socket in ipairs(Server.client_sockets) do
+					if client_socket == client then
+						table.remove(Server.client_sockets, i)
+						break
+					end
+				end
+				for i, clientObj in ipairs(Server.clients) do
+					if clientObj.socket == client then
+						table.remove(Server.clients, i)
+						break
+					end
+				end
+			end
+			goto continue
+		end
+		local received_data = json.decode(temp_data)
+		if received_data then
+			print("Server received data from client:", temp_data)
+
+			local data_type = received_data.type
+			local data = received_data.data
+
+			if data_type == "shoot" then
+				local golf_ball = Server.golf_balls[data.ball_id]
+				golf_ball.current_shooter_id = received_data.client_id
+				golf_ball:shoot(data.shooting_magnitude, data.shooting_angle)
+				Server.send_data_to_all_clients({
+					type = "shoot",
+					data = {
+						ball_id = data.ball_id,
+						client_id = received_data.client_id,
+						shooting_magnitude = data.shooting_magnitude,
+						shooting_angle = data.shooting_angle,
+					},
+				})
+			end
+
+			if i == 1 and data_type == "shutdown" then
+				love.event.quit()
+			end
+			if i == 1 and data_type == "start" then
+				print("Starting game")
+				Server.game_start = true
+				Server:new_world()
+			end
+		end
+		::continue::
+	end
+end
+
+return Server
