@@ -16,7 +16,7 @@ function MainMenu.load()
             x = 0,
             y = height - 400,
             action = function()
-                SM.loadScene("Host")
+                SM.loadScene("HostPort")
             end
         },
         -- join game button

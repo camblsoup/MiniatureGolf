@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 local Game = {
 	game_world = nil,
 	-- obstacles_data = {},
@@ -5,6 +6,23 @@ local Game = {
 	goal = nil,
 	golf_balls = {},
 	current_ball_id = 0,
+=======
+local Client = {
+    client_id = 1,
+    data_to_send = {},
+    data_received = {},
+
+    game_world = nil,
+    -- obstacles_data = {},
+    obstacles = {},
+    goal = nil,
+    golf_balls = {},
+    current_ball_id = 0,
+
+    -- scoreboard show/hide buttons
+    scoreboard_buttons = {},
+    is_scoreboard_visible = true,
+>>>>>>> 4c6536ce1293174e8ae402e643cc1396aa04dbc4
 }
 
 local GolfBall = require("classes/GolfBall")
@@ -12,13 +30,58 @@ local Obstacle = require("classes/Obstacle")
 local Goal = require("classes/Goal")
 local Client = require("lib/Client")
 
+<<<<<<< HEAD
 function Game.load()
 	Game.new_world()
+=======
+local server = nil
+
+-- scoreboard variables
+local scoreboard_font = love.graphics.newFont("assets/dogicapixelbold.ttf", 15)
+
+local scoreboard_posX = love.graphics.getWidth() - 200
+local scoreboard_posY = 20
+local scoreboard_width = 175
+local scoreboard_height = 200
+local button_width = 75
+local button_height = 20
+
+-- flag
+local flag
+
+function Client.load()
+    server = Server.new()
+    table.insert(server.clients, Client)
+    Client.new_world()
+    -- server:generate_level()
+
+    Client.scoreboard_buttons = {
+        show = {
+            img = love.graphics.newImage("assets/img/showButton.png"),
+            x = scoreboard_posX + (scoreboard_width / 2),
+            y = scoreboard_posY + 10,
+            width = button_width,
+            height = button_height,
+            action = Client.ShowScoreboard
+        },
+        hide = {
+            img = love.graphics.newImage("assets/img/hideButton.png"),
+            x = scoreboard_posX + (scoreboard_width / 2),
+            y = scoreboard_posY + scoreboard_height + 10,
+            width = button_width,
+            height = button_height,
+            action = Client.HideScoreboard
+        }
+    }
+
+    flag = love.graphics.newImage("assets/img/flag.png")
+>>>>>>> 4c6536ce1293174e8ae402e643cc1396aa04dbc4
 end
 
 function Game.update(dt)
 	Game.game_world:update(dt)
 
+<<<<<<< HEAD
 	if love.mouse.isDown(1) then
 		for _, golf_ball in ipairs(Game.golf_balls) do
 			golf_ball:aim(Game, love.mouse.getX(), love.mouse.getY())
@@ -34,6 +97,133 @@ function Game.draw()
 	for _, golf_ball in ipairs(Game.golf_balls) do
 		golf_ball:display()
 	end
+=======
+        if data_type == "setup" then
+            Client.golf_balls = {}
+            for _, golf_ball in ipairs(data.golf_balls) do
+                local golf_ball = GolfBall.new(Client.game_world, golf_ball.ball_id, golf_ball.body:getX(),
+                    golf_ball.body:getY())
+                table.insert(Client.golf_balls, golf_ball)
+            end
+        end
+
+        if data_type == "shoot" then
+            local golf_ball = Client.golf_balls[data.ball_id]
+            golf_ball.current_shooter_id = data.client_id
+            golf_ball:update_color(data.client_id)
+            golf_ball:shoot(data.shooting_magnitude, data.shooting_angle)
+        end
+
+        if data_type == "finish_shoot" then
+            local golf_ball = Client.golf_balls[data.ball_id]
+            golf_ball.body:setPosition(data.x, data.y)
+            golf_ball:finish_ball_shoot()
+        end
+
+        if data_type == "goal_reached" then
+            Client.golf_balls[data.ball_id].scored = true
+            Client.golf_balls[data.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
+        end
+
+        if data_type == "game_over" then
+            Client.new_world()
+        end
+    end
+
+    -- Send data to server
+    if Client.data_to_send.type then
+        print("Client sending data:", Client.data_to_send.type)
+        server:receive_data(Client.client_id, Client.data_to_send)
+        Client.data_to_send = {}
+    end
+
+    Client.game_world:update(dt)
+    -- for_, golf_ball in ipairs(Client.golf_balls) do
+    --     if golf_ball.rolling and not golf_ball:isMoving() then
+    --         golf_ball:finish_ball_shoot()
+    --     end
+    -- end
+
+    if love.mouse.isDown(1) then
+        for _, golf_ball in ipairs(Client.golf_balls) do
+            golf_ball:aim(Client, love.mouse.getX(), love.mouse.getY())
+        end
+    end
+
+    server:update(dt) -- Remove once server stands on its own
+end
+
+function Client.draw()
+    Client.goal:draw()
+    for _, obstacle in ipairs(Client.obstacles) do
+        obstacle:draw()
+    end
+
+    for _, golf_ball in ipairs(Client.golf_balls) do
+        golf_ball:display()
+    end
+    for _, golf_ball in ipairs(server.golf_balls) do
+        golf_ball:display()
+    end
+
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print("\nCurrent Client: " .. Client.client_id, 10, 10)
+
+    -- Scoreboard
+    if Client.is_scoreboard_visible == true then
+        Client.Scoreboard()
+    end
+
+    local button = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
+    love.graphics.draw(button.img, button.x, button.y, 0,
+        button.width / button.img:getWidth(), button.height / button.img:getHeight())
+
+    -- Flag
+    local screen_w = love.graphics.getWidth()
+    local screen_h = love.graphics.getHeight()
+    local flag_w = flag:getWidth()
+    local flag_h = flag:getHeight()
+    love.graphics.draw(flag,(screen_w - flag_w) / 2 + 15,(screen_h - flag_h) / 2 - 50)
+end
+
+-- scoreboard function
+function Client.Scoreboard()
+    love.graphics.setFont(scoreboard_font)
+
+    -- black background
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+
+    -- scoreboard text
+    love.graphics.setColor(255, 255, 255) -- Sets the drawing color to red
+    love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+
+    love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
+
+    for i = 1, 4 do
+        local padding = 20
+        local next_height = padding + 40 * i
+        love.graphics.print("Client", scoreboard_posX + 10, next_height)
+        love.graphics.print(":", scoreboard_posX + 110, next_height)
+
+        love.graphics.print(i, scoreboard_posX + 95, next_height)
+        -- TODO: print the scores
+        love.graphics.print("0", scoreboard_posX + 120, next_height)
+    end
+end
+
+------------------------------------------------------------------------------------
+-- show the scoreboard
+function Client.ShowScoreboard()
+    if Client.is_scoreboard_visible == false then
+        Client.is_scoreboard_visible = true
+    end
+end
+
+-- hide the scoreboard
+function Client.HideScoreboard()
+    Client.is_scoreboard_visible = false
+>>>>>>> 4c6536ce1293174e8ae402e643cc1396aa04dbc4
 end
 
 function Game.mousereleased(x, y, button)
@@ -57,6 +247,7 @@ function Game.mousereleased(x, y, button)
 	end
 end
 
+<<<<<<< HEAD
 function Game.new_world()
 	local width = love.graphics.getWidth()
 	local height = love.graphics.getHeight()
@@ -67,6 +258,44 @@ function Game.new_world()
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width, height / 2, 10, height)) -- Right wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, 0, width, 10)) -- Top wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, height, width, 10)) -- Bottom wall
+=======
+-- For testing purposes
+function Client.receive_data(pipeline)
+    Client.data_received = pipeline
+end
+
+-- Once we have an actual server-client architecture, this will be removed (Client id should not ever change)
+function Client.keypressed(key)
+    if key == "q" then
+        Client.client_id = Client.client_id % 4 + 1
+    end
+end
+
+function Client.mousepressed(x, y, button)
+    -- left click
+    if button == 1 then
+        local btn = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
+        local img_w = btn.img:getWidth()
+        local img_h = btn.img:getHeight()
+
+        if x > btn.x and x < btn.x + img_w and
+            y > btn.y and y < btn.y + img_h then
+            btn.action()
+        end
+    end
+end
+
+function Client.new_world()
+    Client.game_world = love.physics.newWorld(0, 0, true)
+    Client.goal = Goal.new(Client.game_world, love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
+    Client.obstacles = {}
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, 0, height / 2, 10, height))     -- Left wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width, height / 2, 10, height)) -- Right wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width / 2, 0, width, 10))       -- Top wall
+    table.insert(Client.obstacles, Obstacle.new(Client.game_world, width / 2, height, width, 10))  -- Bottom wall
+>>>>>>> 4c6536ce1293174e8ae402e643cc1396aa04dbc4
 end
 
 -- function Client.generate_level()
@@ -90,4 +319,8 @@ end
 --     end
 -- end
 
+<<<<<<< HEAD
 return Game
+=======
+return Client
+>>>>>>> 4c6536ce1293174e8ae402e643cc1396aa04dbc4

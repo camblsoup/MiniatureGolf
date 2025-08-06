@@ -10,12 +10,40 @@ local width, height = love.graphics.getDimensions()
 -------------------------------------------------------------
 -- load
 function HostScene.load()
+<<<<<<< HEAD
 	local networkThread
 	if jit.os == "Windows" then
 		os.execute("start lovec ../Server/")
 	else
 		os.execute("love ../Server/ --console &")
 	end
+=======
+    local networkThread
+    local hostThread = love.thread.newThread("/lib/Server.lua")
+    hostThread:start()
+    HostScene.buttons = {
+        -- start game
+        start = {
+            img = love.graphics.newImage("assets/img/startButton.png"),
+            x = 0,
+            y = height - 100,
+            action = function()
+                SM.loadScene("Game")
+            end
+        },
+        -- return to main menu
+        back = {
+            img = love.graphics.newImage("assets/img/backButton.png"),
+            x = 10,
+            y = 10,
+            action = function()
+                SM.loadScene("HostPort")
+            end
+        }
+    }
+    for name, button in pairs(HostScene.buttons) do
+        -- button size
+>>>>>>> 4c6536ce1293174e8ae402e643cc1396aa04dbc4
 
 	Client.load("127.0.0.1", 7777)
 	HostScene.buttons = {
