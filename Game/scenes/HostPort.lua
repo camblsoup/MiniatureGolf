@@ -1,5 +1,6 @@
 local SM = require("lib/sceneManager")
 local Client = require("lib/Client")
+local socket = require("socket")
 
 local HostPort = {
 	buttons = {},

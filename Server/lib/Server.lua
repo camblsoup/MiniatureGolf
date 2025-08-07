@@ -131,7 +131,6 @@ function Server:new_world()
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width, height / 2, 10, height)) -- Right wall
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, 0, width, 10)) -- Top wall
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, height, width, 10)) -- Bottom wall
-	print("Sending setup")
 	Server.send_data_to_all_clients({
 		type = "setup",
 		data = {
@@ -198,7 +197,7 @@ function Server.receive_data()
 		end
 		local received_data = json.decode(temp_data)
 		if received_data then
-			print("Server received data from client:", temp_data)
+			-- print("Server received data from client:", temp_data)
 
 			local data_type = received_data.type
 			local data = received_data.data
