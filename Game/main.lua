@@ -20,11 +20,8 @@ function love.draw()
 end
 
 function love.quit()
-	if Client and Client.socket_thread then
+	if Client then
 		Client.send_data_to_server({ type = "shutdown", data = nil })
-		while Client.socket_thread:isRunning() do
-			socket.sleep(0.01)
-		end
 	end
 end
 

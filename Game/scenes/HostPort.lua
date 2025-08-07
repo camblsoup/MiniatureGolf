@@ -9,6 +9,7 @@ local width, height = love.graphics.getDimensions()
 local box_w = 200
 
 local text
+local starting_server
 local box = {
 	w = box_w,
 	h = 50,
@@ -26,6 +27,7 @@ local width, height = love.graphics.getDimensions()
 function HostPort.load()
 	love.graphics.setFont(fontPort)
 	text = "" or text
+	starting_server = false
 
 	HostPort.buttons = {
 		createGame = {
@@ -33,6 +35,10 @@ function HostPort.load()
 			x = 10,
 			y = 10,
 			action = function()
+				if starting_server then
+					return
+				end
+				starting_server = true
 				SM.port = tonumber(text) or 5000
 				if jit.os == "Windows" then
 					os.execute("start lovec ../Server/ " .. text)
@@ -44,6 +50,7 @@ function HostPort.load()
 					SM.loadScene("Host")
 				else
 					print("Could not start server: " .. err)
+					starting_server = false
 				end
 			end,
 		},
