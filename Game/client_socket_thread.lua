@@ -26,12 +26,7 @@ while true do
 	if success or err == "already connected" or client:getpeername() then
 		break
 	end
-	if err and err ~= "timeout" then
-		client:close()
-		send_channel:supply("Could not connect to server " .. err)
-		return
-	end
-	if socket.gettime() - start_time > 11 then
+	if socket.gettime() - start_time > 8 then
 		client:close()
 		send_channel:supply("Could not connect to server")
 		return
