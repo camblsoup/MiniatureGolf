@@ -40,7 +40,7 @@ function HostPort.load()
 				else
 					os.execute("love ../Server/ " .. port .. " --console &")
 				end
-				local connected, err = Client.load("127.0.0.1", tonumber(port))
+				local connected, err = Client.load("127.0.0.1", port)
 				if connected then
 					print("connected to server")
 					SM.loadScene("Host")

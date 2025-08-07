@@ -192,7 +192,6 @@ function Server.receive_data()
 			end
 			goto continue
 		end
-		print(temp_data)
 		local received_data = json.decode(temp_data)
 		if received_data then
 			print("Server received data from client:", temp_data)
@@ -201,6 +200,7 @@ function Server.receive_data()
 			local data = received_data.data
 
 			if data_type == "shoot" then
+				print("Received shoot")
 				local golf_ball = Server.golf_balls[data.ball_id]
 				golf_ball.current_shooter_id = received_data.client_id
 				golf_ball:shoot(data.shooting_magnitude, data.shooting_angle)

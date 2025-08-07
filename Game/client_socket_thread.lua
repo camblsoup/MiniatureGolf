@@ -19,7 +19,7 @@ end
 local client
 local success, err = false, nil
 local start_time = socket.gettime()
-while not success do
+while true do
 	client = assert(socket.tcp())
 	client:settimeout(1)
 	success, err = client:connect(host, port)
@@ -52,7 +52,7 @@ while true do
 	end
 	local send_data = send_channel:pop()
 	if send_data then
-		print(send_channel:peek())
+		print(send_data)
 		-- print("Sending data to server")
 		print(json.encode(send_data))
 		client:send(json.encode(send_data) .. "\n")

@@ -17,6 +17,7 @@ function Client.load(host, port)
 	Client.socket_thread:start(host, port)
 	local connection_status = love.thread.getChannel("send_channel"):demand()
 	if connection_status == "connected" then
+		Client.send_data_to_server("Test")
 		return true
 	else
 		return false, connection_status
