@@ -19,7 +19,7 @@ function Server.load(port) -- load
 	Server.tick = 0
 	Server.accumulator = 0
 
-	Server.instance = socket.bind("127.0.0.1", tonumber(port))
+	Server.instance = socket.bind("127.0.0.1", port)
 	Server.instance:settimeout(0)
 end
 
