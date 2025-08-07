@@ -19,7 +19,7 @@ end
 local client
 local success, err = false, nil
 local start_time = socket.gettime()
-while not success do
+while true do
 	client = assert(socket.tcp())
 	client:settimeout(1)
 	success, err = client:connect(host, port)
@@ -37,7 +37,7 @@ while not success do
 		return
 	end
 	client:close()
-	socket.sleep(1)
+	socket.sleep(0.01)
 end
 send_channel:supply("connected")
 
@@ -45,23 +45,21 @@ while true do
 	local received_data = client:receive("*l")
 	if received_data then
 		-- print("Received data: " .. received_data)
-		print(received_data)
+<<<<<<< HEAD
+		--print(received_data)
 		local received_data = json.decode(received_data)
 		receive_channel:push(received_data)
 		-- print("Pushed: ", receive_channel:peek())
 	end
 	local send_data = send_channel:pop()
 	if send_data then
-		print(send_channel:peek())
 		-- print("Sending data to server")
-		print(json.encode(send_data))
+		--print("Sending: " .. json.encode(send_data))
 		client:send(json.encode(send_data) .. "\n")
 		if send_data.type == "shutdown" then
 			print("Sent shutdown")
-			send_channel:supply("exit")
-			return
 		end
 	end
 
-	socket.sleep(1)
+	socket.sleep(0.01)
 end

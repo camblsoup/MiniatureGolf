@@ -226,10 +226,12 @@ function Server.receive_data()
 			end
 			goto continue
 		end
-		print(temp_data)
+		if temp_data == "exit" then
+			Server.send_data_to_all_clients("exit")
+		end
 		local received_data = json.decode(temp_data)
 		if received_data then
-			print("Server received data from client:", temp_data)
+			-- print("Server received data from client:", temp_data)
 
 			local data_type = received_data.type
 			local data = received_data.data
