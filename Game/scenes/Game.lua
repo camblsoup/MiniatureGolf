@@ -14,6 +14,7 @@ local GolfBall = require("classes/GolfBall")
 local Obstacle = require("classes/Obstacle")
 local Goal = require("classes/Goal")
 local Client = require("lib/Client")
+local SM = require("lib/sceneManager")
 
 -- scoreboard variables
 local scoreboard_font = love.graphics.newFont("assets/dogicapixelbold.ttf", 15)
@@ -68,7 +69,7 @@ function Game.draw()
 	for _, obstacle in ipairs(Game.obstacles) do
 		obstacle:draw()
 	end
-	for _, golf_ball in ipairs(Game.golf_balls) do
+	for _, golf_ball in ipairs((SM.currentScene and SM.currentScene.golf_balls) or Game.golf_balls) do
 		golf_ball:display()
 	end
 

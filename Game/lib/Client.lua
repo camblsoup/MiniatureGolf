@@ -41,10 +41,13 @@ function Client.receive_data()
 
 		if data_type == "id" then
 			Client.client_id = data.id
-			Client.color = data.color
+			print("Got client ID:", Client.client_id)
+			-- Ask server for current setup in case the game already started
+			Client.send_data_to_server({ type = "request_setup" })
 		end
 
 		if data_type == "setup" then
+			SM.loadScene("Game")
 			SM.currentScene.golf_balls = {}
 			for _, golf_ball_data in ipairs(data.golf_balls) do
 				local golf_ball =

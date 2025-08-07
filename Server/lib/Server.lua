@@ -29,6 +29,8 @@ function Server.load(port) -- load
 	Server.tick = 0
 	Server.accumulator = 0
 
+	Server.host_id = nil
+
 	Server.instance = socket.bind("127.0.0.1", port)
 	Server.instance:settimeout(0)
 	print("Server started")
@@ -51,6 +53,11 @@ function Server.listen()
 			table.remove(COLORS, 1)
 			client:send(json.encode({ type = "id", data = { id = clientObj.id, color = color } }) .. "\n")
 			print("New client connected! ID:", clientObj.id)
+
+			-- If game already running, immediately send current setup/state to late joiner
+			if Server.game_start and Server.golf_balls then
+				Server.send_setup_to_client(clientObj)
+			end
 		end
 	end
 end
@@ -170,6 +177,33 @@ function Server.send_data_to_all_clients(data)
 	end
 end
 
+function Server.send_data_to_client(clientObj, data)
+	local jsonString = json.encode(data)
+	local ok = clientObj.socket:send(jsonString .. "\n")
+	if not ok then
+		-- drop silently; removal handled elsewhere when detected
+		return false
+	end
+	return true
+end
+
+function Server.send_setup_to_client(clientObj)
+	if not Server.golf_balls then return end
+	local client_balls_data = {}
+	for _, ball in ipairs(Server.golf_balls) do
+		table.insert(client_balls_data, {
+			ball_id = ball.ball_id,
+			x = ball.body:getX(),
+			y = ball.body:getY(),
+			scored = ball.scored,
+		})
+	end
+	Server.send_data_to_client(clientObj, {
+		type = "setup",
+		data = { golf_balls = client_balls_data },
+	})
+end
+
 function Server.receive_data()
 	local readable, _, _ = socket.select(Server.client_sockets, nil, 0)
 	for i, client in ipairs(readable) do
@@ -219,10 +253,22 @@ function Server.receive_data()
 			if i == 1 and data_type == "shutdown" then
 				love.event.quit()
 			end
-			if i == 1 and data_type == "start" then
+			if data_type == "start" --[[and (not Server.host_id or received_data.client_id == Server.host_id)--]] then
+				if not Server.host_id then
+					Server.host_id = received_data.client_id
+				end
 				print("Starting game")
 				Server.game_start = true
 				Server:new_world()
+			end
+			if data_type == "request_setup" then
+				-- send current setup to requester if game is running
+				for _, clientObj in ipairs(Server.clients) do
+					if clientObj.socket == client then
+						Server.send_setup_to_client(clientObj)
+						break
+					end
+				end
 			end
 		end
 		::continue::
