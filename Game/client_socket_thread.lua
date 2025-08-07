@@ -16,26 +16,29 @@ if not port or type(port) ~= "number" then
 	return
 end
 
-local client = assert(socket.tcp())
-local success, err = client:connect(host, port)
-client:settimeout(0)
+local client
+local success, err = false, nil
 local start_time = socket.gettime()
-while true do
-	local ok, err = client:getpeername()
-	if ok then
+while not success do
+	client = assert(socket.tcp())
+	client:settimeout(0)
+	success, err = client:connect(host, port)
+	if success or err == "already connected" or client:getpeername() then
 		break
 	end
-	if err ~= "timeout" then
+	if err and err ~= "timeout" then
+		client:close()
+		send_channel:supply("Could not connect to server " .. err)
+		return
+	end
+	if socket.gettime() - start_time > 10 then
+		client:close()
 		send_channel:supply("Could not connect to server")
 		return
 	end
-	if socket.gettime() - start_time > 5 then
-		send_channel:supply("Could not connect to server")
-		return
-	end
+	client:close()
 	socket.sleep(0.01)
 end
-assert(success)
 send_channel:supply("connected")
 
 while true do

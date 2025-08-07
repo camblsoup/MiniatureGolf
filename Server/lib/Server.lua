@@ -13,7 +13,7 @@ local FIXED_DT = 1 / 60
 function Server.load(port) -- load
 	if not port or type(port) ~= "number" then
 		error("Port number not specified properly")
-		os.exit()
+		love.event.quit()
 	end
 	math.randomseed(os.time() + socket.gettime())
 	-- Server.level_index = 1
@@ -183,6 +183,7 @@ function Server.receive_data()
 			end
 			goto continue
 		end
+		print(temp_data)
 		local received_data = json.decode(temp_data)
 		if received_data then
 			print("Server received data from client:", temp_data)
