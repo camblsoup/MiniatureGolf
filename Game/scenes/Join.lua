@@ -12,8 +12,13 @@ local box = {
 	y = (height - 50) / 2,
 	pad = 10,
 }
+-- error message
+local isErrorMessageVisible = false
+local timer = 0
+
 local JoinScene = {
 	buttons = {},
+
 }
 -------------------------------------------------------------
 function JoinScene.load()
@@ -47,6 +52,7 @@ function JoinScene.load()
 				else
 					-- handle connection error
 					print("Could not connect: " .. err)
+					JoinScene.errorMessageVisible()
 				end
 			end,
 		},
@@ -71,12 +77,12 @@ function JoinScene.draw()
 	for _, button in pairs(JoinScene.buttons) do
 		love.graphics.draw(
 			button.img,
-			button.x, -- x position
-			button.y, -- y position
-			0, -- rotation
+			button.x,                          -- x position
+			button.y,                          -- y position
+			0,                                 -- rotation
 			button.width / button.img:getWidth(), -- x scale
 			button.height / button.img:getHeight()
-		) -- y scale
+		)                                    -- y scale
 	end
 
 	love.graphics.printf("Join with the host's IP and port number", 0, 100, love.graphics.getWidth(), "center")
@@ -94,6 +100,13 @@ function JoinScene.draw()
 	love.graphics.printf(text, box.x + box.pad, box.y + box.pad, box.w - box.pad * 2, "left")
 
 	love.graphics.setScissor()
+
+	-- error message
+	love.graphics.setColor(255, 0, 0) -- set error message to red
+	if isErrorMessageVisible then
+		JoinScene.invalidLobby()
+	end
+	love.graphics.setColor(255, 255, 255) -- set it back to white
 end
 
 -------------------------------------------------------------
@@ -102,6 +115,10 @@ function love.textinput(t)
 	if t:match("[0-9%./:]") then
 		text = text .. t
 	end
+end
+
+function JoinScene.update(dt)
+	JoinScene.timer(dt)
 end
 
 -------------------------------------------------------------
@@ -124,6 +141,24 @@ end
 function JoinScene.keypressed(key)
 	if key == "backspace" then
 		text = text:sub(1, -2)
+	end
+end
+
+function JoinScene.invalidLobby()
+	love.graphics.printf("The IP/port you have inputted is invalid", 0, height - 250, love.graphics.getWidth(), "center")
+end
+
+function JoinScene.errorMessageVisible()
+	isErrorMessageVisible = true
+	timer = 7
+end
+
+function JoinScene.timer(dt)
+	if isErrorMessageVisible then
+		timer = timer - dt
+		if timer <= 0 then
+			isErrorMessageVisible = false
+		end
 	end
 end
 
