@@ -1,6 +1,5 @@
 local SM = require("lib/sceneManager")
 local Client = require("lib/Client")
-local socket = require("socket")
 
 local HostPort = {
 	buttons = {},
@@ -35,7 +34,7 @@ function HostPort.load()
 			x = 10,
 			y = 10,
 			action = function()
-				local port = tonumber(text) or 5000
+				local port = tonumber(text) or 7777
 				if jit.os == "Windows" then
 					os.execute("start lovec ../Server/ " .. port)
 				else

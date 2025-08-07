@@ -51,7 +51,7 @@ while true do
 	local send_data = send_channel:pop()
 	if send_data then
 		-- print("Sending data to server")
-		--print("Sending: " .. json.encode(send_data))
+		-- print("Sending: " .. json.encode(send_data))
 		client:send(json.encode(send_data) .. "\n")
 		if send_data.type == "shutdown" then
 			print("Sent shutdown")
