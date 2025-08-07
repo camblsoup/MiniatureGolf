@@ -14,10 +14,6 @@ local server = nil
 function Client.load(host, port)
 	Client.socket_thread = love.thread.newThread("client_socket_thread.lua")
 	Client.socket_thread:start(host, port)
-	--local response = love.thread.getChannel("send_channel"):demand()
-	--if response ~= "connected" then
-	--		Client.client_id = -1
-	--end
 end
 
 function Client.update(dt)

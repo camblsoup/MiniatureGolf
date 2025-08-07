@@ -34,14 +34,17 @@ function JoinScene.load()
 			x = 0,
 			y = 450,
 			action = function()
-				print(text)
 				local words = {}
 				for split in string.gmatch(text, "([^:]+)") do
 					table.insert(words, split)
 				end
 				Client.load(words[1], words[2])
 				local ok, err = Client.socket:getpeername()
+				local start_time = socket.gettime()
 				while Client.socket_thread and not ok do
+					if socket.gettime() - start_time > 5 then
+						break
+					end
 					ok, err = Client.socket:getpeername()
 					socket.sleep(0.01)
 				end

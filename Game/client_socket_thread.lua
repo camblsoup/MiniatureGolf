@@ -19,14 +19,11 @@ while true do
 		error("Connect failed: " .. tostring(err))
 	end
 	if socket.gettime() - start_time > 5 then
-		--send_channel:supply("not connected")
 		return
 	end
 	socket.sleep(0.01)
 end
 assert(success)
-
---send_channel:supply("connected")
 
 while true do
 	local received_data = client:receive("*l")
