@@ -1,7 +1,6 @@
 local SceneManager = {
 	currentScene = nil,
 	currentScenePath = nil,
-	port = 5000
 }
 
 function SceneManager.loadScene(sceneName)
