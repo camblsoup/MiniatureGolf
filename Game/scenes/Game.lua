@@ -90,6 +90,20 @@ function Game.draw()
     love.graphics.draw(flag,(screen_w - flag_w) / 2 + 15,(screen_h - flag_h) / 2 - 50)
 end
 
+function Game.mousepressed(x, y, button)
+    -- left click
+    if button == 1 then
+        local btn = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
+        local img_w = btn.img:getWidth()
+        local img_h = btn.img:getHeight()
+
+        if x > btn.x and x < btn.x + img_w and
+            y > btn.y and y < btn.y + img_h then
+            btn.action()
+        end
+    end
+end
+
 function Game.mousereleased(x, y, button)
 	if button ~= 1 then
 		return
@@ -124,18 +138,44 @@ function Game.new_world()
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, height, width, 10)) -- Bottom wall
 end
 
-function Game.mousepressed(x, y, button)
-    -- left click
-    if button == 1 then
-        local btn = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
-        local img_w = btn.img:getWidth()
-        local img_h = btn.img:getHeight()
+------------------------------------------------------------------------------------
+-- scoreboard function
+function Game.Scoreboard()
+    love.graphics.setFont(scoreboard_font)
 
-        if x > btn.x and x < btn.x + img_w and
-            y > btn.y and y < btn.y + img_h then
-            btn.action()
-        end
+    -- black background
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+
+    -- scoreboard text
+    love.graphics.setColor(255, 255, 255) -- Sets the drawing color to red
+    love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+
+    love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
+
+    for i = 1, 4 do
+        local padding = 20
+        local next_height = padding + 40 * i
+        love.graphics.print("Client", scoreboard_posX + 10, next_height)
+        love.graphics.print(":", scoreboard_posX + 110, next_height)
+
+        love.graphics.print(i, scoreboard_posX + 95, next_height)
+        -- TODO: print the scores
+        love.graphics.print("0", scoreboard_posX + 120, next_height)
     end
+end
+
+------------------------------------------------------------------------------------
+-- show the scoreboard
+function Game.ShowScoreboard()
+    if Game.is_scoreboard_visible == false then
+        Game.is_scoreboard_visible = true
+    end
+end
+
+-- hide the scoreboard
+function Game.HideScoreboard()
+    Game.is_scoreboard_visible = false
 end
 
 -- function Client.generate_level()
