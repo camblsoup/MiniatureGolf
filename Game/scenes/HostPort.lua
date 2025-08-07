@@ -33,6 +33,7 @@ function HostPort.load()
             x = 10,
             y = 10,
             action = function()
+                SM.port = tonumber(text) or 5000
                 SM.loadScene("Host")
             end
         },

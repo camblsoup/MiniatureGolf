@@ -11,7 +11,7 @@ local NUM_BALLS = 4
 local FIXED_DT = 1 / 60
 
 function Server.load(port) -- load
-	if not port or port.type ~= "number" then
+	if not port or type(port) ~= "number" then
 		error("Port number not specified properly")
 		os.exit()
 	end
@@ -25,6 +25,7 @@ function Server.load(port) -- load
 
 	Server.instance = socket.bind("127.0.0.1", port)
 	Server.instance:settimeout(0)
+	print("Server finished loading")
 end
 
 function Server.listen()
