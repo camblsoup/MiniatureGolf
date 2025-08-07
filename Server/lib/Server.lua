@@ -25,6 +25,7 @@ function Server.load(port) -- load
 
 	Server.instance = socket.bind("127.0.0.1", port)
 	Server.instance:settimeout(0)
+	print("Server finished loading")
 end
 
 function Server.listen()
