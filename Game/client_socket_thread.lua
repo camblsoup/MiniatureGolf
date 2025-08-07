@@ -45,7 +45,7 @@ while true do
 	local received_data = client:receive("*l")
 	if received_data then
 		-- print("Received data: " .. received_data)
-		print(received_data)
+		--print(received_data)
 		local received_data = json.decode(received_data)
 		receive_channel:push(received_data)
 		-- print("Pushed: ", receive_channel:peek())
@@ -53,7 +53,7 @@ while true do
 	local send_data = send_channel:pop()
 	if send_data then
 		-- print("Sending data to server")
-		print("Sending: " .. json.encode(send_data))
+		--print("Sending: " .. json.encode(send_data))
 		client:send(json.encode(send_data) .. "\n")
 		if send_data.type == "shutdown" then
 			print("Sent shutdown")
