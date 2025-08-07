@@ -11,6 +11,10 @@ local NUM_BALLS = 4
 local FIXED_DT = 1 / 60
 
 function Server.load(port) -- load
+	if not port or port.type ~= "number" then
+		error("Port number not specified properly")
+		os.exit()
+	end
 	math.randomseed(os.time() + socket.gettime())
 	-- Server.level_index = 1
 	Server.clients = {}
