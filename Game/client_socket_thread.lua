@@ -26,12 +26,7 @@ while true do
 	if success or err == "already connected" or client:getpeername() then
 		break
 	end
-	if err and err ~= "timeout" then
-		client:close()
-		send_channel:supply("Could not connect to server " .. err)
-		return
-	end
-	if socket.gettime() - start_time > 11 then
+	if socket.gettime() - start_time > 8 then
 		client:close()
 		send_channel:supply("Could not connect to server")
 		return
@@ -44,9 +39,11 @@ send_channel:supply("connected")
 while true do
 	local received_data = client:receive("*l")
 	if received_data then
+		if received_data == "exit" then
+			receive_channel:supply("exit")
+			return
+		end
 		-- print("Received data: " .. received_data)
-<<<<<<< HEAD
-		--print(received_data)
 		local received_data = json.decode(received_data)
 		receive_channel:push(received_data)
 		-- print("Pushed: ", receive_channel:peek())

@@ -20,12 +20,11 @@ function love.draw()
 end
 
 function love.quit()
-	if Client then
+	if Client.socket_thread then
 		print("Sending shutdown")
 		Client.send_data_to_server({ type = "shutdown", data = nil })
-		local exit = love.thread.getChannel("receive_channel"):demand()
-		if exit ~= "exit" then
-			print(exit)
+		local exit = love.thread.getChannel("receive_channel"):demand(3)
+		if not exit or exit ~= "exit" then
 			print("Exited improperly")
 		end
 	end
