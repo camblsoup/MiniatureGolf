@@ -1,8 +1,8 @@
 local Server = require("lib/Server")
 local server
 
-function love.load()
-	Server.load()
+function love.load(args)
+	Server.load(args[1])
 end
 
 function love.update(dt)

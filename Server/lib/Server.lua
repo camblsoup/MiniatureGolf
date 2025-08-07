@@ -10,7 +10,7 @@ local Goal = require("../classes/Goal")
 local NUM_BALLS = 4
 local FIXED_DT = 1 / 60
 
-function Server.load() -- load
+function Server.load(port) -- load
 	math.randomseed(os.time() + socket.gettime())
 	-- Server.level_index = 1
 	Server.clients = {}
@@ -19,7 +19,7 @@ function Server.load() -- load
 	Server.tick = 0
 	Server.accumulator = 0
 
-	Server.instance = socket.bind("127.0.0.1", 7777)
+	Server.instance = socket.bind("127.0.0.1", tonumber(port))
 	Server.instance:settimeout(0)
 end
 

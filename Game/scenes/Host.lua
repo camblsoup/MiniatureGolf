@@ -10,14 +10,12 @@ local width, height = love.graphics.getDimensions()
 -------------------------------------------------------------
 -- load
 function HostScene.load()
-<<<<<<< HEAD
 	local networkThread
 	if jit.os == "Windows" then
-		os.execute("start lovec ../Server/")
+		os.execute("start lovec ../Server/ 7777")
 	else
-		os.execute("love ../Server/ --console &")
+		os.execute("love ../Server/ 7777 --console &")
 	end
-=======
     local networkThread
     local hostThread = love.thread.newThread("/lib/Server.lua")
     hostThread:start()
@@ -43,7 +41,6 @@ function HostScene.load()
     }
     for name, button in pairs(HostScene.buttons) do
         -- button size
->>>>>>> 4c6536ce1293174e8ae402e643cc1396aa04dbc4
 
 	Client.load("127.0.0.1", 7777)
 	HostScene.buttons = {
