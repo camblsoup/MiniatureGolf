@@ -78,12 +78,12 @@ function HostPort.draw()
 	for _, button in pairs(HostPort.buttons) do
 		love.graphics.draw(
 			button.img,
-			button.x, -- x position
-			button.y, -- y position
-			0, -- rotation
+			button.x,                          -- x position
+			button.y,                          -- y position
+			0,                                 -- rotation
 			button.width / button.img:getWidth(), -- x scale
 			button.height / button.img:getHeight()
-		) -- y scale
+		)                                    -- y scale
 	end
 
 	-- textbox
@@ -116,7 +116,7 @@ end
 -- textbox input for port
 -- seems to be a dupe
 function love.textinput(t)
-	if t:match("[0-9%./:]") then
+	if #text < 5 and t:match("[0-9%./:]") then
 		text = text .. t
 	end
 end
