@@ -37,7 +37,7 @@ while true do
 		return
 	end
 	client:close()
-	socket.sleep(1)
+	socket.sleep(0.01)
 end
 send_channel:supply("connected")
 
@@ -52,16 +52,13 @@ while true do
 	end
 	local send_data = send_channel:pop()
 	if send_data then
-		print(send_data)
 		-- print("Sending data to server")
-		print(json.encode(send_data))
+		print("Sending: " .. json.encode(send_data))
 		client:send(json.encode(send_data) .. "\n")
 		if send_data.type == "shutdown" then
 			print("Sent shutdown")
-			send_channel:supply("exit")
-			return
 		end
 	end
 
-	socket.sleep(1)
+	socket.sleep(0.01)
 end

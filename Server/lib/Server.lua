@@ -131,6 +131,7 @@ function Server:new_world()
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width, height / 2, 10, height)) -- Right wall
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, 0, width, 10)) -- Top wall
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, height, width, 10)) -- Bottom wall
+	print("Sending setup")
 	Server.send_data_to_all_clients({
 		type = "setup",
 		data = {
@@ -192,6 +193,9 @@ function Server.receive_data()
 			end
 			goto continue
 		end
+		if temp_data == "exit" then
+			Server.send_data_to_all_clients("exit")
+		end
 		local received_data = json.decode(temp_data)
 		if received_data then
 			print("Server received data from client:", temp_data)
@@ -200,7 +204,6 @@ function Server.receive_data()
 			local data = received_data.data
 
 			if data_type == "shoot" then
-				print("Received shoot")
 				local golf_ball = Server.golf_balls[data.ball_id]
 				golf_ball.current_shooter_id = received_data.client_id
 				golf_ball:shoot(data.shooting_magnitude, data.shooting_angle)

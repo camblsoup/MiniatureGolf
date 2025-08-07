@@ -17,7 +17,6 @@ function Client.load(host, port)
 	Client.socket_thread:start(host, port)
 	local connection_status = love.thread.getChannel("send_channel"):demand()
 	if connection_status == "connected" then
-		Client.send_data_to_server("Test")
 		return true
 	else
 		return false, connection_status
@@ -35,6 +34,9 @@ end
 function Client.receive_data()
 	local receive_channel = love.thread.getChannel("receive_channel")
 	local received_data = receive_channel:pop()
+	if received_data == "exit" then
+		love.event.quit()
+	end
 	while received_data do
 		local data_type = received_data.type
 		local data = received_data.data

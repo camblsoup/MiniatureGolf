@@ -23,7 +23,7 @@ function love.quit()
 	if Client then
 		print("Sending shutdown")
 		Client.send_data_to_server({ type = "shutdown", data = nil })
-		local exit = love.thread.getChannel("send_channel"):demand()
+		local exit = love.thread.getChannel("receive_channel"):demand()
 		if exit ~= "exit" then
 			print(exit)
 			print("Exited improperly")
