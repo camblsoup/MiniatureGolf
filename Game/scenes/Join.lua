@@ -38,18 +38,15 @@ function JoinScene.load()
 				for split in string.gmatch(text, "([^:]+)") do
 					table.insert(words, split)
 				end
-				Client.load(words[1], words[2])
-				local ok, err = Client.socket:getpeername()
-				local start_time = socket.gettime()
-				while Client.socket_thread and not ok do
-					if socket.gettime() - start_time > 5 then
-						break
-					end
-					ok, err = Client.socket:getpeername()
-					socket.sleep(0.01)
-				end
-				if ok then
+				local host = words[1]
+				local port = tonumber(words[2])
+				print(host .. "type: " .. type(host) .. port .. "type: " .. type(port))
+				local connected, err = Client.load(host, port)
+				if connected then
 					SM.loadScene("Joined") -- ensure that the user inputs a valid network
+				else
+					-- handle connection error
+					print("Could not connect: " .. err)
 				end
 			end,
 		},

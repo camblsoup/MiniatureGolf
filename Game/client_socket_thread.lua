@@ -6,6 +6,16 @@ local host, port = ...
 local receive_channel = love.thread.getChannel("receive_channel")
 local send_channel = love.thread.getChannel("send_channel")
 
+if not host or type(host) ~= "string" then
+	send_channel:supply("Host is not provided or is not a string")
+	return
+end
+
+if not port or type(port) ~= "number" then
+	send_channel:supply("Port is not provided or is not a number")
+	return
+end
+
 local client = assert(socket.tcp())
 local success, err = client:connect(host, port)
 client:settimeout(0)
@@ -16,14 +26,17 @@ while true do
 		break
 	end
 	if err ~= "timeout" then
-		error("Connect failed: " .. tostring(err))
+		send_channel:supply("Could not connect to server")
+		return
 	end
 	if socket.gettime() - start_time > 5 then
+		send_channel:supply("Could not connect to server")
 		return
 	end
 	socket.sleep(0.01)
 end
 assert(success)
+send_channel:supply("connected")
 
 while true do
 	local received_data = client:receive("*l")
