@@ -7,14 +7,7 @@ local VIRTUAL_WIDTH = 192
 local VIRTUAL_HEIGHT = 108
 local FORCE_SCALE = 150 -- Scale up the force applied to the golf ball
 
-local colors = {
-	{ 1, 0, 0 },
-	{ 0, 1, 0 },
-	{ 0, 0, 1 },
-	{ 1, 1, 0 },
-}
-
-function GolfBall.new(world, id, x, y, server_controlled)
+function GolfBall.new(world, id, x, y)
 	local self = setmetatable({}, GolfBall)
 
 	-- Physics
@@ -27,7 +20,6 @@ function GolfBall.new(world, id, x, y, server_controlled)
 	self.ball_id = id
 	self.current_shooter_id = 0 -- Locked when id is not 0
 	self.color = { 1, 1, 1 }
-	self.server_controlled = server_controlled or false -- Testing
 	self.scored = false
 
 	-- Shooting
@@ -93,14 +85,8 @@ function GolfBall:display()
 		return
 	end
 
-	if self.server_controlled then
-		love.graphics.setLineWidth(3)
-		love.graphics.setColor(0.5, 0.5, 0.5)
-		love.graphics.circle("line", self.body:getX(), self.body:getY(), self.shape:getRadius())
-	else
-		love.graphics.setColor(1, 0, 0, 1)
-		love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
-	end
+	love.graphics.setColor(self.color)
+	love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
 
 	if self.is_aiming and not self:isMoving() then
 		love.graphics.setColor(1, 1, 1)
@@ -135,8 +121,8 @@ function GolfBall:finish_ball_shoot()
 	self.shooting_angle = 0
 end
 
-function GolfBall:update_color(current_shooter_id)
-	self.color = colors[current_shooter_id]
+function GolfBall:update_color(color)
+	self.color = color
 end
 
 return GolfBall

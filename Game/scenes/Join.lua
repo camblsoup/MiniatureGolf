@@ -45,9 +45,9 @@ function JoinScene.load()
 				end
 				local host = words[1]
 				local port = tonumber(words[2])
-				print(host .. "type: " .. type(host) .. port .. "type: " .. type(port))
 				local connected, err = Client.load(host, port)
 				if connected then
+					print("Connected to server")
 					SM.loadScene("Joined") -- ensure that the user inputs a valid network
 				else
 					-- handle connection error

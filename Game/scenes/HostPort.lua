@@ -9,6 +9,7 @@ local width, height = love.graphics.getDimensions()
 local box_w = 200
 
 local text
+local starting_server
 local box = {
 	w = box_w,
 	h = 50,
@@ -33,14 +34,15 @@ function HostPort.load()
 			x = 10,
 			y = 10,
 			action = function()
-				SM.port = tonumber(text) or 5000
+				local port = tonumber(text) or 5000
 				if jit.os == "Windows" then
-					os.execute("start lovec ../Server/ " .. text)
+					os.execute("start lovec ../Server/ " .. port)
 				else
-					os.execute("love ../Server/ " .. text .. " --console &")
+					os.execute("love ../Server/ " .. port .. " --console &")
 				end
-				local connected, err = Client.load("127.0.0.1", tonumber(text))
+				local connected, err = Client.load("127.0.0.1", port)
 				if connected then
+					print("connected to server")
 					SM.loadScene("Host")
 				else
 					print("Could not start server: " .. err)

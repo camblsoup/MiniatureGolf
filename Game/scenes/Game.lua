@@ -31,14 +31,14 @@ local flag
 function Game.load()
 	Game.new_world()
 
-    Client.scoreboard_buttons = {
+    Game.scoreboard_buttons = {
         show = {
             img = love.graphics.newImage("assets/img/showButton.png"),
             x = scoreboard_posX + (scoreboard_width / 2),
             y = scoreboard_posY + 10,
             width = button_width,
             height = button_height,
-            action = Client.ShowScoreboard
+            action = Game.ShowScoreboard
         },
         hide = {
             img = love.graphics.newImage("assets/img/hideButton.png"),
@@ -46,7 +46,7 @@ function Game.load()
             y = scoreboard_posY + scoreboard_height + 10,
             width = button_width,
             height = button_height,
-            action = Client.HideScoreboard
+            action = Game.HideScoreboard
         }
     }
 
@@ -73,11 +73,12 @@ function Game.draw()
 	end
 
     -- Scoreboard
-    if Client.is_scoreboard_visible == true then
-        Client.Scoreboard()
+    if Game.is_scoreboard_visible == true then
+        Game.Scoreboard()
     end
 
-    local button = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
+	love.graphics.setColor(1, 1, 1)
+    local button = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
     love.graphics.draw(button.img, button.x, button.y, 0,
         button.width / button.img:getWidth(), button.height / button.img:getHeight())
 
@@ -87,6 +88,20 @@ function Game.draw()
     local flag_w = flag:getWidth()
     local flag_h = flag:getHeight()
     love.graphics.draw(flag,(screen_w - flag_w) / 2 + 15,(screen_h - flag_h) / 2 - 50)
+end
+
+function Game.mousepressed(x, y, button)
+    -- left click
+    if button == 1 then
+        local btn = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
+        local img_w = btn.img:getWidth()
+        local img_h = btn.img:getHeight()
+
+        if x > btn.x and x < btn.x + img_w and
+            y > btn.y and y < btn.y + img_h then
+            btn.action()
+        end
+    end
 end
 
 function Game.mousereleased(x, y, button)
@@ -104,6 +119,7 @@ function Game.mousereleased(x, y, button)
 					ball_id = golf_ball.ball_id,
 					shooting_magnitude = golf_ball.shooting_magnitude,
 					shooting_angle = golf_ball.shooting_angle,
+					color = Client.color
 				},
 			})
 		end
@@ -122,18 +138,44 @@ function Game.new_world()
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, height, width, 10)) -- Bottom wall
 end
 
-function Client.mousepressed(x, y, button)
-    -- left click
-    if button == 1 then
-        local btn = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
-        local img_w = btn.img:getWidth()
-        local img_h = btn.img:getHeight()
+------------------------------------------------------------------------------------
+-- scoreboard function
+function Game.Scoreboard()
+    love.graphics.setFont(scoreboard_font)
 
-        if x > btn.x and x < btn.x + img_w and
-            y > btn.y and y < btn.y + img_h then
-            btn.action()
-        end
+    -- black background
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+
+    -- scoreboard text
+    love.graphics.setColor(255, 255, 255) -- Sets the drawing color to red
+    love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+
+    love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
+
+    for i = 1, 4 do
+        local padding = 20
+        local next_height = padding + 40 * i
+        love.graphics.print("Client", scoreboard_posX + 10, next_height)
+        love.graphics.print(":", scoreboard_posX + 110, next_height)
+
+        love.graphics.print(i, scoreboard_posX + 95, next_height)
+        -- TODO: print the scores
+        love.graphics.print("0", scoreboard_posX + 120, next_height)
     end
+end
+
+------------------------------------------------------------------------------------
+-- show the scoreboard
+function Game.ShowScoreboard()
+    if Game.is_scoreboard_visible == false then
+        Game.is_scoreboard_visible = true
+    end
+end
+
+-- hide the scoreboard
+function Game.HideScoreboard()
+    Game.is_scoreboard_visible = false
 end
 
 -- function Client.generate_level()
