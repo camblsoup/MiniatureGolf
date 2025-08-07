@@ -77,6 +77,7 @@ function Game.draw()
         Client.Scoreboard()
     end
 
+	love.graphics.setColor(1, 1, 1)
     local button = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
     love.graphics.draw(button.img, button.x, button.y, 0,
         button.width / button.img:getWidth(), button.height / button.img:getHeight())
@@ -104,6 +105,7 @@ function Game.mousereleased(x, y, button)
 					ball_id = golf_ball.ball_id,
 					shooting_magnitude = golf_ball.shooting_magnitude,
 					shooting_angle = golf_ball.shooting_angle,
+					color = Client.color
 				},
 			})
 		end

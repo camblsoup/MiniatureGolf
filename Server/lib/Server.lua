@@ -9,6 +9,12 @@ local Goal = require("../classes/Goal")
 
 local NUM_BALLS = 4
 local FIXED_DT = 1 / 60
+local COLORS = {
+	{ 1, 0, 0 },
+	{ 0, 1, 0 },
+	{ 0, 0, 1 },
+	{ 1, 1, 0 },
+}
 
 function Server.load(port) -- load
 	if not port or type(port) ~= "number" then
@@ -25,7 +31,6 @@ function Server.load(port) -- load
 
 	Server.instance = socket.bind("127.0.0.1", port)
 	Server.instance:settimeout(0)
-	print("Server finished loading")
 end
 
 function Server.listen()
@@ -40,7 +45,10 @@ function Server.listen()
 			}
 			table.insert(Server.clients, clientObj)
 			table.insert(Server.client_sockets, client)
-			client:send(json.encode({ type = "id", data = { id = clientObj.id } }) .. "\n")
+
+			local color = COLORS[1]
+			table.remove(COLORS, 1)
+			client:send(json.encode({ type = "id", data = { id = clientObj.id, color = color } }) .. "\n")
 			print("New client connected! ID:", clientObj.id)
 		end
 	end
@@ -202,6 +210,7 @@ function Server.receive_data()
 						client_id = received_data.client_id,
 						shooting_magnitude = data.shooting_magnitude,
 						shooting_angle = data.shooting_angle,
+						color = data.color
 					},
 				})
 			end

@@ -2,6 +2,7 @@ local Client = {
 	client_id = 1,
 	receive_thread = nil,
 	socket = nil,
+	color = { 0.5, 0.5, 0.5 }
 }
 
 local GolfBall = require("classes/GolfBall")
@@ -40,6 +41,7 @@ function Client.receive_data()
 
 		if data_type == "id" then
 			Client.client_id = data.id
+			Client.color = data.color
 		end
 
 		if data_type == "setup" then
@@ -54,7 +56,7 @@ function Client.receive_data()
 		if data_type == "shoot" then
 			local golf_ball = SM.currentScene.golf_balls[data.ball_id]
 			golf_ball.current_shooter_id = data.client_id
-			golf_ball:update_color(data.client_id)
+			golf_ball:update_color(data.color)
 			golf_ball:shoot(data.shooting_magnitude, data.shooting_angle)
 		end
 
