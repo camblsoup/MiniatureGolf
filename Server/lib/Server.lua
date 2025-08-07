@@ -31,6 +31,7 @@ function Server.load(port) -- load
 
 	Server.instance = socket.bind("127.0.0.1", port)
 	Server.instance:settimeout(0)
+	print("Server started")
 end
 
 function Server.listen()
@@ -210,7 +211,7 @@ function Server.receive_data()
 						client_id = received_data.client_id,
 						shooting_magnitude = data.shooting_magnitude,
 						shooting_angle = data.shooting_angle,
-						color = data.color
+						color = data.color,
 					},
 				})
 			end

@@ -2,7 +2,7 @@ local Client = {
 	client_id = 1,
 	receive_thread = nil,
 	socket = nil,
-	color = { 0.5, 0.5, 0.5 }
+	color = { 0.5, 0.5, 0.5 },
 }
 
 local GolfBall = require("classes/GolfBall")

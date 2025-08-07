@@ -10,12 +10,6 @@ local width, height = love.graphics.getDimensions()
 -------------------------------------------------------------
 -- load
 function HostScene.load()
-	if jit.os == "Windows" then
-		os.execute("start lovec ../Server/ " .. tostring(SM.port))
-	else
-		os.execute("love ../Server/ " .. tostring(SM.port) .. " --console &")
-	end
-	Client.load("127.0.0.1", SM.port)
 	HostScene.buttons = {
 		-- start game
 		start = {

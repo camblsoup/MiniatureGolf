@@ -21,7 +21,7 @@ local success, err = false, nil
 local start_time = socket.gettime()
 while not success do
 	client = assert(socket.tcp())
-	client:settimeout(0)
+	client:settimeout(1)
 	success, err = client:connect(host, port)
 	if success or err == "already connected" or client:getpeername() then
 		break
@@ -31,13 +31,13 @@ while not success do
 		send_channel:supply("Could not connect to server " .. err)
 		return
 	end
-	if socket.gettime() - start_time > 10 then
+	if socket.gettime() - start_time > 11 then
 		client:close()
 		send_channel:supply("Could not connect to server")
 		return
 	end
 	client:close()
-	socket.sleep(0.01)
+	socket.sleep(1)
 end
 send_channel:supply("connected")
 
@@ -45,18 +45,23 @@ while true do
 	local received_data = client:receive("*l")
 	if received_data then
 		-- print("Received data: " .. received_data)
+		print(received_data)
 		local received_data = json.decode(received_data)
 		receive_channel:push(received_data)
 		-- print("Pushed: ", receive_channel:peek())
 	end
 	local send_data = send_channel:pop()
 	if send_data then
+		print(send_channel:peek())
 		-- print("Sending data to server")
+		print(json.encode(send_data))
 		client:send(json.encode(send_data) .. "\n")
 		if send_data.type == "shutdown" then
+			print("Sent shutdown")
+			send_channel:supply("exit")
 			return
 		end
 	end
 
-	socket.sleep(0.01)
+	socket.sleep(1)
 end
