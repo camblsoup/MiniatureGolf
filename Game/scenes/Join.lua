@@ -3,6 +3,8 @@ local socket = require("socket")
 local Client = require("lib/Client")
 
 local font = love.graphics.newFont("assets/dogicapixelbold.ttf", 20)
+local fontInput = love.graphics.newFont("assets/dogicapixelbold.ttf", 30)
+
 local width, height = love.graphics.getDimensions()
 local text
 local box = {
@@ -22,7 +24,7 @@ local JoinScene = {
 }
 -------------------------------------------------------------
 function JoinScene.load()
-	love.graphics.setFont(font)
+	love.graphics.setFont(fontInput)
 	text = "" or text
 	JoinScene.buttons = {
 		back = {
@@ -97,7 +99,9 @@ function JoinScene.draw()
 	love.graphics.rectangle("line", box.x, box.y, box.w, box.h)
 	love.graphics.setScissor(box.x + 1, box.y + 5, box.w - 2, box.h - 2) -- wrap
 	-- text
+	love.graphics.setFont(fontInput)
 	love.graphics.printf(text, box.x + box.pad, box.y + box.pad, box.w - box.pad * 2, "left")
+	love.graphics.setFont(font)
 
 	love.graphics.setScissor()
 
@@ -112,7 +116,7 @@ end
 -------------------------------------------------------------
 -- textbox input for IP
 function love.textinput(t)
-	if t:match("[0-9%./:]") then
+	if #text < 21 and t:match("[0-9%./:]") then
 		text = text .. t
 	end
 end
