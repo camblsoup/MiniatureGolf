@@ -31,14 +31,14 @@ local flag
 function Game.load()
 	Game.new_world()
 
-    Client.scoreboard_buttons = {
+    Game.scoreboard_buttons = {
         show = {
             img = love.graphics.newImage("assets/img/showButton.png"),
             x = scoreboard_posX + (scoreboard_width / 2),
             y = scoreboard_posY + 10,
             width = button_width,
             height = button_height,
-            action = Client.ShowScoreboard
+            action = Game.ShowScoreboard
         },
         hide = {
             img = love.graphics.newImage("assets/img/hideButton.png"),
@@ -46,7 +46,7 @@ function Game.load()
             y = scoreboard_posY + scoreboard_height + 10,
             width = button_width,
             height = button_height,
-            action = Client.HideScoreboard
+            action = Game.HideScoreboard
         }
     }
 
@@ -73,12 +73,12 @@ function Game.draw()
 	end
 
     -- Scoreboard
-    if Client.is_scoreboard_visible == true then
-        Client.Scoreboard()
+    if Game.is_scoreboard_visible == true then
+        Game.Scoreboard()
     end
 
 	love.graphics.setColor(1, 1, 1)
-    local button = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
+    local button = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
     love.graphics.draw(button.img, button.x, button.y, 0,
         button.width / button.img:getWidth(), button.height / button.img:getHeight())
 
@@ -124,10 +124,10 @@ function Game.new_world()
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, height, width, 10)) -- Bottom wall
 end
 
-function Client.mousepressed(x, y, button)
+function Game.mousepressed(x, y, button)
     -- left click
     if button == 1 then
-        local btn = Client.is_scoreboard_visible and Client.scoreboard_buttons.hide or Client.scoreboard_buttons.show
+        local btn = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
         local img_w = btn.img:getWidth()
         local img_h = btn.img:getHeight()
 
