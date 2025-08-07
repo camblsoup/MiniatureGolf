@@ -45,7 +45,6 @@ while true do
 	local received_data = client:receive("*l")
 	if received_data then
 		-- print("Received data: " .. received_data)
-<<<<<<< HEAD
 		--print(received_data)
 		local received_data = json.decode(received_data)
 		receive_channel:push(received_data)
