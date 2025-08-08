@@ -16,7 +16,9 @@ local box = {
 }
 -- error message
 local isErrorMessageVisible = false
-local timer = 0
+local isConnecting = false
+local connectionResult = nil
+local connectionCoroutine = nil
 
 local JoinScene = {
 	buttons = {},
@@ -40,23 +42,31 @@ function JoinScene.load()
 			x = 0,
 			y = 450,
 			action = function()
+				if connectionCoroutine then
+					-- already connecting
+					return
+				end
+
+				isConnecting = true
 				isErrorMessageVisible = false
-				timer = 0
-				local words = {}
-				for split in string.gmatch(text, "([^:]+)") do
-					table.insert(words, split)
-				end
-				local host = words[1]
-				local port = tonumber(words[2])
-				local connected, err = Client.load(host, port)
-				if connected then
-					print("Connected to server")
-					SM.loadScene("Joined") -- ensure that the user inputs a valid network
-				else
-					-- handle connection error
-					print("Could not connect: " .. err)
-					JoinScene.errorMessageVisible()
-				end
+
+				connectionCoroutine = coroutine.create(function()
+					coroutine.yield() -- yield so main loop can draw
+					local words = {}
+					for split in string.gmatch(text, "([^:]+)") do
+						table.insert(words, split)
+					end
+					local host = words[1]
+					local port = tonumber(words[2])
+
+					local connected, err = Client.load(host, port)
+
+					if connected then
+						connectionResult = "success"
+					else
+						connectionResult = err or "unknown error"
+					end
+				end)
 			end,
 		},
 	}
@@ -69,6 +79,28 @@ function JoinScene.load()
 			button.width = 220
 			button.height = 50
 			button.x = (love.graphics.getWidth() - button.width) / 2
+		end
+	end
+end
+
+function JoinScene.update(dt)
+	if connectionCoroutine then
+		local status, res = coroutine.resume(connectionCoroutine)
+		if not status then
+			-- Coroutine error
+			print("Connection coroutine error:", res)
+			isConnecting = false
+			isErrorMessageVisible = true
+			connectionCoroutine = nil
+		elseif coroutine.status(connectionCoroutine) == "dead" then
+			-- Coroutine finished
+			if connectionResult == "success" then
+				SM.loadScene("Joined")
+			else
+				isConnecting = false
+				isErrorMessageVisible = true
+			end
+			connectionCoroutine = nil
 		end
 	end
 end
@@ -106,6 +138,11 @@ function JoinScene.draw()
 
 	love.graphics.setScissor()
 
+	-- Connecting message
+	if isConnecting then
+		JoinScene.connecting()
+	end
+
 	-- error message
 	love.graphics.setColor(255, 0, 0) -- set error message to red
 	if isErrorMessageVisible then
@@ -120,10 +157,6 @@ function love.textinput(t)
 	if #text < 21 and t:match("[0-9%./:]") then
 		text = text .. t
 	end
-end
-
-function JoinScene.update(dt)
-	JoinScene.timer(dt)
 end
 
 -------------------------------------------------------------
@@ -159,18 +192,12 @@ function JoinScene.invalidLobby()
 	)
 end
 
-function JoinScene.errorMessageVisible()
-	isErrorMessageVisible = true
-	timer = 20
+function JoinScene.connecting()
+	love.graphics.printf("Connecting...", 0, height - 250, love.graphics.getWidth(), "center")
 end
 
-function JoinScene.timer(dt)
-	if isErrorMessageVisible then
-		timer = timer - dt
-		if timer <= 0 then
-			isErrorMessageVisible = false
-		end
-	end
+function JoinScene.errorMessageVisible()
+	isErrorMessageVisible = true
 end
 
 return JoinScene

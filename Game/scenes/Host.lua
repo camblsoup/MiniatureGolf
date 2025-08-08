@@ -1,15 +1,25 @@
 local SM = require("lib/sceneManager")
 local Client = require("lib/Client")
+local socket = require("socket")
+local json = require("lib/json")
 
 local HostScene = {
 	buttons = {},
 }
 
 local fontIP = love.graphics.newFont("assets/dogicapixelbold.ttf", 20)
+local fontTitle = love.graphics.newFont("assets/dogicapixelbold.ttf", 30)
+
 local width, height = love.graphics.getDimensions()
+local ip = nil
+local port = nil
 -------------------------------------------------------------
 -- load
 function HostScene.load()
+	local udp = socket.udp()
+	udp:setpeername("8.8.8.8", 80)
+	ip = udp:getsockname()
+	udp:close()
 	HostScene.buttons = {
 		-- start game
 		start = {
@@ -26,6 +36,12 @@ function HostScene.load()
 			x = 10,
 			y = 10,
 			action = function()
+				print("Sending shutdown")
+				Client.send_data_to_server({ type = "shutdown", data = nil })
+				local exit = love.thread.getChannel("receive_channel"):demand(3)
+				if not exit or exit ~= "exit" then
+					print("Exited improperly")
+				end
 				SM.loadScene("MainMenu")
 			end,
 		},
@@ -47,13 +63,21 @@ end
 -------------------------------------------------------------
 -- your IP address
 function HostScene.IP()
+	love.graphics.setFont(fontTitle, width)
+
+	love.graphics.printf(ip .. ":" .. SM.host_port, 0, 150, love.graphics.getWidth(), "center")
+
 	love.graphics.setFont(fontIP, width)
 
 	love.graphics.printf("Your IP:", 0, 100, love.graphics.getWidth(), "center")
 
-	love.graphics.printf("Open command prompt and type 'ipconfig'", 0, 150, love.graphics.getWidth(), "center")
-
-	love.graphics.printf("Your friends will connect with IPv4 address!", 0, 200, love.graphics.getWidth(), "center")
+	love.graphics.printf(
+		"Your friends will connect with this IPv4 address!",
+		0,
+		220,
+		love.graphics.getWidth(),
+		"center"
+	)
 end
 
 -------------------------------------------------------------
