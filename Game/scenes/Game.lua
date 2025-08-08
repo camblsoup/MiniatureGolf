@@ -49,7 +49,7 @@ function Game.load()
 		},
 	}
 
-	flag = love.graphics.newImage("assets/img/flag.png")
+	flag = love.graphics.newImage("assets/img/flag2.png")
 	Game.ballCollideSfx = love.audio.newSource("sfx/bump.wav", "static")
 	Game.ballHitSfx = love.audio.newSource("sfx/put.wav", "static")
 end
@@ -102,7 +102,7 @@ function Game.draw()
 	local screen_h = love.graphics.getHeight()
 	local flag_w = flag:getWidth()
 	local flag_h = flag:getHeight()
-	love.graphics.draw(flag, (screen_w - flag_w) / 2 + 15, (screen_h - flag_h) / 2 - 50)
+	love.graphics.draw(flag, Game.goal.body:getX() - 25, Game.goal.body:getY() - 127)
 end
 
 function Game.mousepressed(x, y, button)
@@ -131,12 +131,12 @@ function Game.mousereleased(x, y, button)
 			golf_ball:shoot(golf_ball.shooting_magnitude, golf_ball.shooting_angle)
 			Client.send_data_to_server({
 				type = "shoot",
-				client_id = Client.client_id,
 				data = {
 					ball_id = golf_ball.ball_id,
 					shooting_magnitude = golf_ball.shooting_magnitude,
 					shooting_angle = golf_ball.shooting_angle,
 					color = Client.color,
+					client_id = Client.client_id,
 				},
 			})
 		end
@@ -147,8 +147,10 @@ local function beginContact(fixtureA, fixtureB, contact)
 	local dataA = fixtureA:getUserData()
 	local dataB = fixtureB:getUserData()
 
-	Game.ballCollideSfx:stop() -- restart sound for rapid collisions
-	Game.ballCollideSfx:play()
+	if (dataA == "golf_ball" and dataB == "obstacle") or (dataA == "obstacle" and dataB == "golf_ball") or (dataA == "golf_ball" and dataB == "golf_ball") then
+		Game.ballCollideSfx:stop() -- restart sound for rapid collisions
+		Game.ballCollideSfx:play()
+	end
 end
 
 function Game.new_world(level_data)

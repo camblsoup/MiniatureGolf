@@ -22,8 +22,9 @@ function Server.load(port) -- load
 		love.event.quit()
 	end
 	math.randomseed(os.time() + socket.gettime())
-	Server.level_index = math.random(1, 3)
+	Server.level_index = 2 --math.random(1, 3)
 	Server.clients = {}
+	Server.client_count = 0
 	Server.client_sockets = {}
 
 	Server.tick = 0
@@ -38,22 +39,30 @@ end
 
 function Server.listen()
 	Server.receive_data()
-	if (not Server.clients or #Server.clients == 0) and socket.gettime() - Server.start_time > 5 then
+	if (not Server.clients or Server.client_count == 0) and socket.gettime() - Server.start_time > 5 then
+		print("No clients")
 		love.event.quit()
 	end
-	if not Server.clients or #Server.clients < 4 then
+	if not Server.clients or Server.client_count < 4 then
 		local client = Server.instance:accept()
 		if client then
 			client:settimeout(0)
-			local clientObj = {
-				id = math.random(10, 9999999999),
-			}
-			table.insert(Server.clients, clientObj)
-			table.insert(Server.client_sockets, client)
-
 			local color = COLORS[1]
 			table.remove(COLORS, 1)
-			client:send(json.encode({ type = "id", data = { id = clientObj.id, color = color } }) .. "\n")
+
+			Server.client_count = Server.client_count + 1
+			local clientObj = {
+				id = math.random(10, 9999999999),
+				player_num = Server.client_count,
+				color = color,
+				score = 0,
+				socket = client
+			}
+			Server.clients[clientObj.id] = clientObj
+			table.insert(Server.client_sockets, client)
+
+			client:send(json.encode({ type = "id", data = { id = clientObj.id, color = clientObj.color, player_num = clientObj.player_num } }) ..
+				"\n")
 			print("New client connected! ID:", clientObj.id)
 
 			-- If game already running, immediately send current setup/state to late joiner
@@ -74,7 +83,7 @@ function Server:update(dt)
 end
 
 function Server:fixed_update(dt)
-	if (#Server.clients == 0) then
+	if (Server.client_count == 0) then
 		love.event.quit()
 	end
 	Server.receive_data()
@@ -96,7 +105,7 @@ function Server:fixed_update(dt)
 			self.golf_balls[golf_ball.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
 			self.num_golf_balls = self.num_golf_balls - 1
 			if golf_ball.current_shooter_id >= 10 then
-				self.points[golf_ball.current_shooter_id] = self.points[golf_ball.current_shooter_id] + 1
+				self.clients[golf_ball.current_shooter_id].score = self.clients[golf_ball.current_shooter_id].score + 1
 			end
 			Server.send_data_to_all_clients({
 				type = "goal_reached",
@@ -138,12 +147,12 @@ end
 function Server.send_data_to_all_clients(data)
 	local jsonString = json.encode(data)
 	--print("Sending data: " .. jsonString)
-	for i, client in ipairs(Server.client_sockets) do
-		local success, err = client:send(jsonString .. "\n")
+	for id, client in pairs(Server.clients) do
+		local success, err = client.socket:send(jsonString .. "\n")
 		if not success then
-			client:close()
-			table.remove(Server.clients, i)
-			table.remove(Server.client_sockets, i)
+			client.socket:close()
+			table.remove(Server.clients, id)
+			table.remove(Server.client_sockets, client.player_num)
 		end
 	end
 end
@@ -188,11 +197,11 @@ function Server.receive_data()
 						table.remove(Server.client_sockets, i)
 						break
 					end
-				end
-				for i, clientObj in ipairs(Server.clients) do
-					if clientObj.socket == client then
-						table.remove(Server.clients, i)
-						break
+					for id, clientObj in pairs(Server.clients) do
+						if clientObj.player_num == i then
+							table.remove(Server.clients, clientObj.id)
+							break
+						end
 					end
 				end
 			end
@@ -200,20 +209,20 @@ function Server.receive_data()
 		end
 		local received_data = json.decode(temp_data)
 		if received_data then
-			--print("Server received data from client:", temp_data)
+			print("Server received data from client:", temp_data)
 
 			local data_type = received_data.type
 			local data = received_data.data
 
 			if data_type == "shoot" then
 				local golf_ball = Server.golf_balls[data.ball_id]
-				golf_ball.current_shooter_id = received_data.client_id
+				golf_ball.current_shooter_id = data.client_id
 				golf_ball:shoot(data.shooting_magnitude, data.shooting_angle)
 				Server.send_data_to_all_clients({
 					type = "shoot",
 					data = {
 						ball_id = data.ball_id,
-						client_id = received_data.client_id,
+						client_id = data.client_id,
 						shooting_magnitude = data.shooting_magnitude,
 						shooting_angle = data.shooting_angle,
 						color = data.color,
@@ -222,29 +231,28 @@ function Server.receive_data()
 			end
 
 			if data_type == "shutdown" then
-				if received_data.id == Server.clients[1].id then
+				local client_instance = Server.clients[received_data.id]
+				if not client_instance then goto continue end
+				if client_instance.player_num == 1 then
 					Server.send_data_to_all_clients({ type = "shutdown", data = nil })
 					love.event.quit()
 				else
-					for j, client in ipairs(Server.clients) do
-						if client.id == received_data.id then
-							Server.client_sockets[j]:send(json.encode({ type = "shutdown", data = nil }) .. "\n")
-							print("Client disconnected: " .. Server.clients[j].id)
-							table.remove(Server.clients, j)
-							Server.client_sockets[j]:close()
-							table.remove(Server.client_sockets, j)
-						end
-					end
+					client_instance.socket:send(json.encode({ type = "shutdown", data = nil }) ..
+						"\n")
+					print("Client disconnected: " .. client_instance.id)
+					client_instance.socket:close()
+					table.remove(Server.client_sockets, client_instance.player_num)
+					table.remove(Server.clients, received_data.id)
 				end
 			end
-			if data_type == "start" and received_data.id == Server.clients[1].id then
+			if data_type == "start" and Server.clients[received_data.id].player_num == 1 then
 				Server.game_start = true
 				Server.send_data_to_all_clients({ type = "start", data = nil })
 				Server:new_world()
 			end
 			if data_type == "request_setup" then
 				-- send current setup to requester if game is running
-				for _, clientObj in ipairs(Server.clients) do
+				for id, clientObj in pairs(Server.clients) do
 					if clientObj.socket == client then
 						Server.send_setup_to_client(clientObj)
 						break

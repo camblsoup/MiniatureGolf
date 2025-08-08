@@ -1,7 +1,7 @@
 local Goal = {}
 Goal.__index = Goal
 
-local RADIUS = 20
+local RADIUS = 4
 
 function Goal.new(world, x, y)
     local self = setmetatable({}, Goal)
@@ -9,14 +9,14 @@ function Goal.new(world, x, y)
     self.body = love.physics.newBody(world, x, y, "static")
     self.shape = love.physics.newCircleShape(RADIUS)
     self.fixture = love.physics.newFixture(self.body, self.shape, 1)
-    self.fixture:setRestitution(0.8)
+    self.fixture:setRestitution(0)
 
     return self
 end
 
 function Goal:draw()
-    love.graphics.setColor(1, 1, 0)
-    love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius() + 6)
 end
 
 function Goal:check_reached(golf_ball_body)

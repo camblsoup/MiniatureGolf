@@ -65,7 +65,6 @@ function Player:display_aim(golf_ball_x, golf_ball_y)
     love.graphics.line(self.mouse_x, self.mouse_y, golf_ball_x, golf_ball_y)
 
     love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.print(self.shooting_magnitude)
 end
 
 -- Called when player releases the mouse button

@@ -1,8 +1,9 @@
 local Client = {
-	client_id = 1,
+	client_id = 0,
+	player_num = 0,
 	receive_thread = nil,
 	socket = nil,
-	color = { 0.5, 0.5, 0.5 },
+	color = { 1, 1, 1 },
 }
 
 local GolfBall = require("classes/GolfBall")
@@ -53,6 +54,8 @@ function Client.receive_data()
 
 		if data_type == "id" then
 			Client.client_id = data.id
+			Client.color = data.color
+			Client.player_num = data.player_num or 0
 			print("Got client ID:", Client.client_id)
 			-- Ask server for current setup in case the game already started
 			Client.send_data_to_server({ type = "request_setup" })

@@ -11,10 +11,12 @@ function GolfBall.new(world, id, x, y, audiosource)
 	local self = setmetatable({}, GolfBall)
 
 	-- Physics
-	self.body = love.physics.newBody(world, x, y, "dynamic") -- Creates a rigid body for the ball
-	self.shape = love.physics.newCircleShape(BALL_RADIUS) -- Gives the body a circular shape
+	self.body = love.physics.newBody(world, x, y, "dynamic")      -- Creates a rigid body for the ball
+	self.shape = love.physics.newCircleShape(BALL_RADIUS)         -- Gives the body a circular shape
 	self.fixture = love.physics.newFixture(self.body, self.shape, 1) -- Attaches the shape to the body and gives a density of 1
-	self.body:setLinearDamping(1) -- Gives the body friction when moving around the world
+	self.fixture:setUserData("golf_ball")
+	self.fixture:setRestitution(1.0)                              -- Makes the balls bounce more
+	self.body:setLinearDamping(1)                                 -- Gives the body friction when moving around the world
 
 	-- Communication
 	self.ball_id = id
@@ -93,7 +95,6 @@ function GolfBall:display()
 		love.graphics.setColor(1, 1, 1)
 		love.graphics.line(self.mouse_x, self.mouse_y, self.body:getX(), self.body:getY())
 		love.graphics.setColor(1, 1, 1, 1)
-		love.graphics.print(self.shooting_magnitude)
 	end
 end
 

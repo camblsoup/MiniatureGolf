@@ -1,4 +1,5 @@
 local SM = require("lib/sceneManager")
+local Client = require("lib/Client")
 
 local Joined = {}
 
@@ -23,21 +24,26 @@ function Joined.load()
 	end
 end
 
+function Joined.update(dt)
+	Client.receive_data()
+end
+
 function Joined.draw()
 	love.graphics.setFont(font)
 
 	love.graphics.printf("Successfully joined!", 0, 100, love.graphics.getWidth(), "center")
 	love.graphics.printf("Waiting for the host to start the game...", 0, 150, love.graphics.getWidth(), "center")
 
+
 	for _, button in pairs(Joined.buttons) do
 		love.graphics.draw(
 			button.img,
-			button.x, -- x position
-			button.y, -- y position
-			0, -- rotation
+			button.x,                    -- x position
+			button.y,                    -- y position
+			0,                           -- rotation
 			button.width / button.img:getWidth(), -- x scale
 			button.height / button.img:getHeight()
-		) -- y scale
+		)                                -- y scale
 	end
 end
 

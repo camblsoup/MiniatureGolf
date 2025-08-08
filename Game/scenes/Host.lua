@@ -84,6 +84,8 @@ end
 function HostScene.draw()
 	HostScene.IP()
 
+	love.graphics.print("You are player #" .. Client.player_num)
+
 	for _, button in pairs(HostScene.buttons) do
 		love.graphics.draw(
 			button.img,

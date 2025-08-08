@@ -7,13 +7,14 @@ function Obstacle.new(world, x, y, width, height)
     self.body = love.physics.newBody(world, x, y, "static")
     self.shape = love.physics.newRectangleShape(width, height)
     self.fixture = love.physics.newFixture(self.body, self.shape, 1)
+    self.fixture:setUserData("obstacle")
     self.fixture:setRestitution(0.8)
 
     return self
 end
 
 function Obstacle:draw()
-    love.graphics.setColor(0.5, 0.5, 0.5)
+    love.graphics.setColor(1, 1, 1)
     love.graphics.polygon("fill", self.body:getWorldPoints(self.shape:getPoints()))
 end
 

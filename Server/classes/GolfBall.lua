@@ -11,11 +11,12 @@ function GolfBall.new(world, id, x, y)
 	local self = setmetatable({}, GolfBall)
 
 	-- Physics
-	self.body = love.physics.newBody(world, x, y, "dynamic") -- Creates a rigid body for the ball
-	self.shape = love.physics.newCircleShape(BALL_RADIUS) -- Gives the body a circular shape
+	self.body = love.physics.newBody(world, x, y, "dynamic")      -- Creates a rigid body for the ball
+	self.shape = love.physics.newCircleShape(BALL_RADIUS)         -- Gives the body a circular shape
 	self.fixture = love.physics.newFixture(self.body, self.shape, 1) -- Attaches the shape to the body and gives a density of 1
+	self.fixture:setRestitution(1.0)                              -- Makes the balls bounce more
 	self.fixture:setUserData("golf_ball")
-	self.body:setLinearDamping(1) -- Gives the body friction when moving around the world
+	self.body:setLinearDamping(1)                                 -- Gives the body friction when moving around the world
 
 	-- Communication
 	self.ball_id = id
