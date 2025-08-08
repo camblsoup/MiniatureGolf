@@ -27,10 +27,9 @@ function love.quit()
 		local exit
 		repeat
 			exit = love.thread.getChannel("receive_channel"):demand(3)
-		until exit.type == "shutdown" or exit == nil
+		until (exit and exit.type == "shutdown") or exit == nil
 		if not exit then
 			print("Exited improperly")
-			print(exit)
 		end
 	end
 end

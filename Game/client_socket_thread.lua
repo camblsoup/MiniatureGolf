@@ -52,7 +52,11 @@ while true do
 	local received_data = client:receive("*l")
 	if received_data then
 		--print("Received data: " .. received_data)
-		local received_data = json.decode(received_data)
+		local success, received_data = pcall(json.decode, received_data)
+		if not success then
+			print(received_data)
+			goto continue
+		end
 		if received_data.type == "shutdown" then
 			client:close()
 			receive_channel:supply(received_data)
@@ -67,4 +71,5 @@ while true do
 	end
 
 	socket.sleep(0.01)
+	::continue::
 end
