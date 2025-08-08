@@ -226,9 +226,6 @@ function Server.receive_data()
 			end
 			goto continue
 		end
-		if temp_data == "exit" then
-			Server.send_data_to_all_clients("exit")
-		end
 		local received_data = json.decode(temp_data)
 		if received_data then
 			-- print("Server received data from client:", temp_data)
@@ -253,14 +250,12 @@ function Server.receive_data()
 			end
 
 			if i == 1 and data_type == "shutdown" then
+				Server.send_data_to_all_clients("exit")
 				love.event.quit()
 			end
-			if data_type == "start" --[[and (not Server.host_id or received_data.client_id == Server.host_id)--]] then
-				if not Server.host_id then
-					Server.host_id = received_data.client_id
-				end
-				print("Starting game")
+			if i == 1 and data_type == "start" then
 				Server.game_start = true
+				Server.send_data_to_all_clients("start")
 				Server:new_world()
 			end
 			if data_type == "request_setup" then

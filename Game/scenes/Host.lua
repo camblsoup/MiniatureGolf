@@ -17,31 +17,6 @@ function HostScene.load()
 			x = 0,
 			y = height - 100,
 			action = function()
-				SM.loadScene("Game")
-			end,
-		},
-		-- return to main menu
-		back = {
-			img = love.graphics.newImage("assets/img/backButton.png"),
-			x = 10,
-			y = 10,
-			action = function()
-				SM.loadScene("HostPort")
-			end,
-		},
-	}
-	for name, button in pairs(HostScene.buttons) do
-		-- button size
-	end
-
-	HostScene.buttons = {
-		-- start game
-		start = {
-			img = love.graphics.newImage("assets/img/startButton.png"),
-			x = 0,
-			y = height - 100,
-			action = function()
-				SM.loadScene("Game")
 				Client.send_data_to_server({ type = "start" })
 			end,
 		},
