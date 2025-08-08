@@ -1,3 +1,5 @@
+-- game server (network + simulation)
+-- receives client commands, and broadcasts results
 local Server = {}
 local socket = require("socket")
 local json = require("lib/json")
@@ -7,8 +9,9 @@ local Obstacle = require("../classes/Obstacle")
 local Goal = require("../classes/Goal")
 local levels = require("../levels")
 
-local NUM_BALLS = 4
-local FIXED_DT = 1 / 60
+-- Game constants
+local NUM_BALLS = 4          -- Balls per round
+local FIXED_DT = 1 / 60      -- Physics tick (seconds)
 local COLORS = {
 	{ 1, 0, 0 },
 	{ 0, 1, 0 },
@@ -16,26 +19,29 @@ local COLORS = {
 	{ 1, 1, 0 },
 }
 
+-- Boot the TCP server on a given port 
 function Server.load(port) -- load
 	if not port or type(port) ~= "number" then
 		error("Port number not specified properly")
 		love.event.quit()
 	end
 	math.randomseed(os.time() + socket.gettime())
-	Server.level_index = math.random(1, 3)
+    Server.level_index = math.random(1, 3)
 	Server.clients = {}
 	Server.client_sockets = {}
 
-	Server.tick = 0
-	Server.accumulator = 0
+    Server.tick = 0          -- global tick counter
+    Server.accumulator = 0   -- accumulator for fixed-step integration
 
-	Server.start_time = socket.gettime()
+    Server.start_time = socket.gettime() -- used to auto-exit when no clients connect
 
-	Server.instance = socket.bind("*", port)
+    -- Bind to all interfaces ("*") so localhost or LAN can connect
+    Server.instance = socket.bind("*", port)
 	Server.instance:settimeout(0)
 	print("Server started")
 end
 
+-- Accept new clients (up to 4) and process incoming messages once per frame
 function Server.listen()
 	Server.receive_data()
 	if (not Server.clients or #Server.clients == 0) and socket.gettime() - Server.start_time > 5 then
@@ -59,6 +65,7 @@ function Server.listen()
 	end
 end
 
+-- Advance the server simulation using a fixed timestep
 function Server:update(dt)
 	self.accumulator = self.accumulator + dt
 	while self.accumulator >= FIXED_DT do
@@ -68,6 +75,8 @@ function Server:update(dt)
 	end
 end
 
+-- 1) Poll network; 2) Step physics; 3) Stop finished shots; 4) Handle goals;
+-- 5) Occasionally snapshot and broadcast ball states
 function Server:fixed_update(dt)
 	Server.receive_data()
 	self.game_world:update(dt)
@@ -107,6 +116,7 @@ function Server:fixed_update(dt)
 	end
 end
 
+-- Broadcast a snapshot of all ball transforms to clients
 function Server.broadcast_state()
 	local ball_states = {}
 	for i, ball in ipairs(Server.golf_balls) do
@@ -127,6 +137,7 @@ function Server.broadcast_state()
 	})
 end
 
+-- Send a JSON message to all connected sockets; remove dead ones
 function Server.send_data_to_all_clients(data)
 	local jsonString = json.encode(data)
 	--print("Sending data: " .. jsonString)
@@ -140,6 +151,7 @@ function Server.send_data_to_all_clients(data)
 	end
 end
 
+-- Poll sockets, parse 1-line JSON messages, and handle commands
 function Server.receive_data()
 	local readable, _, _ = socket.select(Server.client_sockets, nil, 0)
 	for i, client in ipairs(readable) do
@@ -169,6 +181,7 @@ function Server.receive_data()
 			local data_type = received_data.type
 			local data = received_data.data
 
+            -- Apply a shot and echo to everyone
 			if data_type == "shoot" then
 				local golf_ball = Server.golf_balls[data.ball_id]
 				golf_ball.current_shooter_id = received_data.client_id
@@ -185,6 +198,7 @@ function Server.receive_data()
 				})
 			end
 
+            -- Shutdown (first client acts as host here)
 			if data_type == "shutdown" then
 				if received_data.id == Server.clients[1].id then
 					Server.send_data_to_all_clients({ type = "shutdown", data = nil })
@@ -201,6 +215,7 @@ function Server.receive_data()
 					end
 				end
 			end
+            -- Start match (gated to first client)
 			if data_type == "start" and received_data.id == Server.clients[1].id then
 				Server.game_start = true
 				Server.send_data_to_all_clients(json.encode({ type = "start", data = nil }) .. "\n")
@@ -211,19 +226,20 @@ function Server.receive_data()
 	end
 end
 
+-- Build a new round: choose level, spawn goals/balls/obstacles, send setup
 function Server:new_world()
 	local width = 1000
 	local height = 600
 
 	-- General setup
-	self.points = {}
+    self.points = {} -- score per client id
 	for i, client in ipairs(self.clients) do
 		self.points[client.id] = 0
 	end
 	self.game_world = love.physics.newWorld(0, 0, true)
 
 	-- Extra level data
-	local new_level_data = levels[Server.level_index]
+    local new_level_data = levels[Server.level_index] -- pick a level layout
 	local balls_data = new_level_data.balls
 	local goal_data = new_level_data.goal
 	local obstacles_data = new_level_data.obstacles
