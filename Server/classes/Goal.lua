@@ -1,7 +1,7 @@
 local Goal = {}
 Goal.__index = Goal
 
-local RADIUS = 30
+local RADIUS = 20
 
 function Goal.new(world, x, y)
     local self = setmetatable({}, Goal)

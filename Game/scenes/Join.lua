@@ -16,11 +16,12 @@ local box = {
 }
 -- error message
 local isErrorMessageVisible = false
-local timer = 0
+local isConnecting = false
+local connectionResult = nil
+local connectionCoroutine = nil
 
 local JoinScene = {
 	buttons = {},
-
 }
 -------------------------------------------------------------
 function JoinScene.load()
@@ -41,21 +42,31 @@ function JoinScene.load()
 			x = 0,
 			y = 450,
 			action = function()
-				local words = {}
-				for split in string.gmatch(text, "([^:]+)") do
-					table.insert(words, split)
+				if connectionCoroutine then
+					-- already connecting
+					return
 				end
-				local host = words[1]
-				local port = tonumber(words[2])
-				local connected, err = Client.load(host, port)
-				if connected then
-					print("Connected to server")
-					SM.loadScene("Joined") -- ensure that the user inputs a valid network
-				else
-					-- handle connection error
-					print("Could not connect: " .. err)
-					JoinScene.errorMessageVisible()
-				end
+
+				isConnecting = true
+				isErrorMessageVisible = false
+
+				connectionCoroutine = coroutine.create(function()
+					coroutine.yield() -- yield so main loop can draw
+					local words = {}
+					for split in string.gmatch(text, "([^:]+)") do
+						table.insert(words, split)
+					end
+					local host = words[1]
+					local port = tonumber(words[2])
+
+					local connected, err = Client.load(host, port)
+
+					if connected then
+						connectionResult = "success"
+					else
+						connectionResult = err or "unknown error"
+					end
+				end)
 			end,
 		},
 	}
@@ -72,6 +83,28 @@ function JoinScene.load()
 	end
 end
 
+function JoinScene.update(dt)
+	if connectionCoroutine then
+		local status, res = coroutine.resume(connectionCoroutine)
+		if not status then
+			-- Coroutine error
+			print("Connection coroutine error:", res)
+			isConnecting = false
+			isErrorMessageVisible = true
+			connectionCoroutine = nil
+		elseif coroutine.status(connectionCoroutine) == "dead" then
+			-- Coroutine finished
+			if connectionResult == "success" then
+				SM.loadScene("Joined")
+			else
+				isConnecting = false
+				isErrorMessageVisible = true
+			end
+			connectionCoroutine = nil
+		end
+	end
+end
+
 -------------------------------------------------------------
 function JoinScene.draw()
 	love.graphics.setFont(font)
@@ -79,12 +112,12 @@ function JoinScene.draw()
 	for _, button in pairs(JoinScene.buttons) do
 		love.graphics.draw(
 			button.img,
-			button.x,                          -- x position
-			button.y,                          -- y position
-			0,                                 -- rotation
+			button.x, -- x position
+			button.y, -- y position
+			0, -- rotation
 			button.width / button.img:getWidth(), -- x scale
 			button.height / button.img:getHeight()
-		)                                    -- y scale
+		) -- y scale
 	end
 
 	love.graphics.printf("Join with the host's IP and port number", 0, 100, love.graphics.getWidth(), "center")
@@ -105,6 +138,11 @@ function JoinScene.draw()
 
 	love.graphics.setScissor()
 
+	-- Connecting message
+	if isConnecting then
+		JoinScene.connecting()
+	end
+
 	-- error message
 	love.graphics.setColor(255, 0, 0) -- set error message to red
 	if isErrorMessageVisible then
@@ -119,10 +157,6 @@ function love.textinput(t)
 	if #text < 21 and t:match("[0-9%./:]") then
 		text = text .. t
 	end
-end
-
-function JoinScene.update(dt)
-	JoinScene.timer(dt)
 end
 
 -------------------------------------------------------------
@@ -149,21 +183,21 @@ function JoinScene.keypressed(key)
 end
 
 function JoinScene.invalidLobby()
-	love.graphics.printf("The IP/port you have inputted is invalid", 0, height - 250, love.graphics.getWidth(), "center")
+	love.graphics.printf(
+		"The IP/port you have inputted is invalid",
+		0,
+		height - 250,
+		love.graphics.getWidth(),
+		"center"
+	)
+end
+
+function JoinScene.connecting()
+	love.graphics.printf("Connecting...", 0, height - 250, love.graphics.getWidth(), "center")
 end
 
 function JoinScene.errorMessageVisible()
 	isErrorMessageVisible = true
-	timer = 7
-end
-
-function JoinScene.timer(dt)
-	if isErrorMessageVisible then
-		timer = timer - dt
-		if timer <= 0 then
-			isErrorMessageVisible = false
-		end
-	end
 end
 
 return JoinScene

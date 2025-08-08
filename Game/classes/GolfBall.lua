@@ -7,7 +7,7 @@ local VIRTUAL_WIDTH = 192
 local VIRTUAL_HEIGHT = 108
 local FORCE_SCALE = 150 -- Scale up the force applied to the golf ball
 
-function GolfBall.new(world, id, x, y)
+function GolfBall.new(world, id, x, y, audiosource)
 	local self = setmetatable({}, GolfBall)
 
 	-- Physics
@@ -31,6 +31,7 @@ function GolfBall.new(world, id, x, y)
 	self.normalized_mouse_y = 0
 	self.shooting_magnitude = 0
 	self.shooting_angle = 0
+	self.hit_sfx = audiosource
 
 	return self
 end
@@ -97,6 +98,7 @@ function GolfBall:display()
 end
 
 function GolfBall:shoot(force, angle)
+	self.hit_sfx:play()
 	self.is_aiming = false
 	self.rolling = true
 	force = force * FORCE_SCALE -- Scale the force applied to the golf ball

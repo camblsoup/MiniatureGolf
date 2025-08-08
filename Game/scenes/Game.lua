@@ -1,14 +1,13 @@
 local Game = {
 	game_world = nil,
-	-- obstacles_data = {},
-	obstacles = {},
 	goal = nil,
 	golf_balls = {},
+	obstacles = {},
 	current_ball_id = 0,
-    -- scoreboard show/hide buttons
-    scoreboard_buttons = {},
-    is_scoreboard_visible = true,
-    scores = {}, -- client_id -> score
+  -- scoreboard show/hide buttons
+  scoreboard_buttons = {},
+  is_scoreboard_visible = true,
+  scores = {}, -- client_id -> score
 }
 
 local GolfBall = require("classes/GolfBall")
@@ -31,31 +30,35 @@ local button_height = 20
 local flag
 
 function Game.load()
-	Game.new_world()
+	Game.scoreboard_buttons = {
+		show = {
+			img = love.graphics.newImage("assets/img/showButton.png"),
+			x = scoreboard_posX + (scoreboard_width / 2),
+			y = scoreboard_posY + 10,
+			width = button_width,
+			height = button_height,
+			action = Game.ShowScoreboard,
+		},
+		hide = {
+			img = love.graphics.newImage("assets/img/hideButton.png"),
+			x = scoreboard_posX + (scoreboard_width / 2),
+			y = scoreboard_posY + scoreboard_height + 10,
+			width = button_width,
+			height = button_height,
+			action = Game.HideScoreboard,
+		},
+	}
 
-    Game.scoreboard_buttons = {
-        show = {
-            img = love.graphics.newImage("assets/img/showButton.png"),
-            x = scoreboard_posX + (scoreboard_width / 2),
-            y = scoreboard_posY + 10,
-            width = button_width,
-            height = button_height,
-            action = Game.ShowScoreboard
-        },
-        hide = {
-            img = love.graphics.newImage("assets/img/hideButton.png"),
-            x = scoreboard_posX + (scoreboard_width / 2),
-            y = scoreboard_posY + scoreboard_height + 10,
-            width = button_width,
-            height = button_height,
-            action = Game.HideScoreboard
-        }
-    }
-
-    flag = love.graphics.newImage("assets/img/flag.png")
+	flag = love.graphics.newImage("assets/img/flag.png")
+	Game.ballCollideSfx = love.audio.newSource("sfx/bump.wav", "static")
+	Game.ballHitSfx = love.audio.newSource("sfx/put.wav", "static")
 end
 
 function Game.update(dt)
+	if not Game.game_world then
+		return
+	end
+
 	Game.game_world:update(dt)
 
 	if love.mouse.isDown(1) then
@@ -66,6 +69,10 @@ function Game.update(dt)
 end
 
 function Game.draw()
+	if not Game.game_world then
+		return
+	end
+
 	Game.goal:draw()
 	for _, obstacle in ipairs(Game.obstacles) do
 		obstacle:draw()
@@ -74,36 +81,41 @@ function Game.draw()
 		golf_ball:display()
 	end
 
-    -- Scoreboard
-    if Game.is_scoreboard_visible == true then
-        Game.Scoreboard()
-    end
+	-- Scoreboard
+	if Game.is_scoreboard_visible == true then
+		Game.Scoreboard()
+	end
 
 	love.graphics.setColor(1, 1, 1)
-    local button = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
-    love.graphics.draw(button.img, button.x, button.y, 0,
-        button.width / button.img:getWidth(), button.height / button.img:getHeight())
+	local button = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
+	love.graphics.draw(
+		button.img,
+		button.x,
+		button.y,
+		0,
+		button.width / button.img:getWidth(),
+		button.height / button.img:getHeight()
+	)
 
-    -- Flag
-    local screen_w = love.graphics.getWidth()
-    local screen_h = love.graphics.getHeight()
-    local flag_w = flag:getWidth()
-    local flag_h = flag:getHeight()
-    love.graphics.draw(flag,(screen_w - flag_w) / 2 + 15,(screen_h - flag_h) / 2 - 50)
+	-- Flag
+	local screen_w = love.graphics.getWidth()
+	local screen_h = love.graphics.getHeight()
+	local flag_w = flag:getWidth()
+	local flag_h = flag:getHeight()
+	love.graphics.draw(flag, (screen_w - flag_w) / 2 + 15, (screen_h - flag_h) / 2 - 50)
 end
 
 function Game.mousepressed(x, y, button)
-    -- left click
-    if button == 1 then
-        local btn = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
-        local img_w = btn.img:getWidth()
-        local img_h = btn.img:getHeight()
+	-- left click
+	if button == 1 then
+		local btn = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
+		local img_w = btn.img:getWidth()
+		local img_h = btn.img:getHeight()
 
-        if x > btn.x and x < btn.x + img_w and
-            y > btn.y and y < btn.y + img_h then
-            btn.action()
-        end
-    end
+		if x > btn.x and x < btn.x + img_w and y > btn.y and y < btn.y + img_h then
+			btn.action()
+		end
+	end
 end
 
 function Game.mousereleased(x, y, button)
@@ -124,39 +136,74 @@ function Game.mousereleased(x, y, button)
 					ball_id = golf_ball.ball_id,
 					shooting_magnitude = golf_ball.shooting_magnitude,
 					shooting_angle = golf_ball.shooting_angle,
-					color = Client.color
+					color = Client.color,
 				},
 			})
 		end
 	end
 end
 
-function Game.new_world()
+local function beginContact(fixtureA, fixtureB, contact)
+	print("Collision")
+	local dataA = fixtureA:getUserData()
+	local dataB = fixtureB:getUserData()
+
+	Game.ballCollideSfx:stop() -- restart sound for rapid collisions
+	Game.ballCollideSfx:play()
+end
+
+function Game.new_world(level_data)
+	-- General setup
 	local width = love.graphics.getWidth()
 	local height = love.graphics.getHeight()
 	Game.game_world = love.physics.newWorld(0, 0, true)
-	Game.goal = Goal.new(Game.game_world, width / 2, height / 2)
+
+	-- Extra level data components
+	local goal_data = level_data.goal_data
+	local balls_data = level_data.balls_data
+	local obstacles_data = level_data.obstacles_data
+
+	Game.goal = Goal.new(Game.game_world, goal_data.x, goal_data.y)
+
+	-- Create balls
+	Game.golf_balls = {}
+	for i, ball_data in ipairs(balls_data) do
+		table.insert(
+			Game.golf_balls,
+			GolfBall.new(Game.game_world, ball_data.ball_id, ball_data.x, ball_data.y, Game.ballHitSfx)
+		)
+	end
+
+	-- Create obstacles
 	Game.obstacles = {}
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, 0, height / 2, 10, height)) -- Left wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width, height / 2, 10, height)) -- Right wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, 0, width, 10)) -- Top wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, height, width, 10)) -- Bottom wall
+
+	for _, obstacle_data in ipairs(obstacles_data) do
+		table.insert(
+			Game.obstacles,
+			Obstacle.new(Game.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height)
+		)
+	end
+	Game.game_world:setCallbacks(beginContact, nil, nil, nil)
 end
 
 ------------------------------------------------------------------------------------
 -- scoreboard function
 function Game.Scoreboard()
-    love.graphics.setFont(scoreboard_font)
+	love.graphics.setFont(scoreboard_font)
 
-    -- black background
-    love.graphics.setColor(0, 0, 0)
-    love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+	-- black background
+	love.graphics.setColor(0, 0, 0)
+	love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
 
-    -- scoreboard text
-    love.graphics.setColor(255, 255, 255) -- Sets the drawing color to red
-    love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+	-- scoreboard text
+	love.graphics.setColor(255, 255, 255) -- Sets the drawing color to red
+	love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
 
-    love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
+	love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
 
     -- draw up to 4 clients from the scores table
     local row = 0
@@ -174,35 +221,14 @@ end
 ------------------------------------------------------------------------------------
 -- show the scoreboard
 function Game.ShowScoreboard()
-    if Game.is_scoreboard_visible == false then
-        Game.is_scoreboard_visible = true
-    end
+	if Game.is_scoreboard_visible == false then
+		Game.is_scoreboard_visible = true
+	end
 end
 
 -- hide the scoreboard
 function Game.HideScoreboard()
-    Game.is_scoreboard_visible = false
+	Game.is_scoreboard_visible = false
 end
-
--- function Client.generate_level()
---     local screen_width = love.graphics.getWidth()
---     local screen_height = love.graphics.getHeight()
-
---     Client.game_world = love.physics.newWorld(0, 0, true)
---     Client.obstacles_data = server.obstacles_data
-
---     local golf_ball_data = Client.obstacles_data[1]
---     local goal_data = Client.obstacles_data[2]
---     Client.golf_ball = GolfBall.new(Client.game_world, screen_width * golf_ball_data.x, screen_height * golf_ball_data.y, 10)
---     Client.goal = Goal.new(Client.game_world, screen_width * goal_data.x, screen_height * goal_data.y)
-
---     Client.obstacles = {}
---     local screen_width = love.graphics.getWidth()
---     local screen_height = love.graphics.getHeight()
---     for i = 3, #Client.obstacles_data do
---         local obstacle_data = Client.obstacles_data[i]
---         table.insert(Client.obstacles, Obstacle.new(Client.game_world, screen_width * obstacle_data.x, screen_height * obstacle_data.y, screen_width * obstacle_data.width, screen_height * obstacle_data.height))
---     end
--- end
 
 return Game

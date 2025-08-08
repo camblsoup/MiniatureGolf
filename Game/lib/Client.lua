@@ -34,16 +34,22 @@ end
 function Client.receive_data()
 	local receive_channel = love.thread.getChannel("receive_channel")
 	local received_data = receive_channel:pop()
-	if received_data == "exit" then
-		love.event.quit()
-	elseif received_data == "start" then
-		SM.loadScene("Game")
-		return
-	end
 	while received_data do
+		print("Client received data:", json.encode(received_data))
+
 		local data_type = received_data.type
 		local data = received_data.data
-		--print("Client received data:", received_data)
+
+		if data_type == "shutdown" then
+			print("Exiting")
+			Client.socket_thread:wait()
+			love.event.quit()
+		end
+
+		if data_type == "start" then
+			SM.loadScene("Game")
+			return
+		end
 
 		if data_type == "id" then
 			Client.client_id = data.id
@@ -53,13 +59,7 @@ function Client.receive_data()
 		end
 
 		if data_type == "setup" then
-			SM.loadScene("Game")
-			SM.currentScene.golf_balls = {}
-			for _, golf_ball_data in ipairs(data.golf_balls) do
-				local golf_ball =
-					GolfBall.new(SM.currentScene.game_world, golf_ball_data.ball_id, golf_ball_data.x, golf_ball_data.y)
-				table.insert(SM.currentScene.golf_balls, golf_ball)
-			end
+			SM.currentScene.new_world(data.level_data)
 		end
 
 		if data_type == "shoot" then
