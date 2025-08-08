@@ -8,6 +8,7 @@ local Game = {
     -- scoreboard show/hide buttons
     scoreboard_buttons = {},
     is_scoreboard_visible = true,
+    scores = {}, -- client_id -> score
 }
 
 local GolfBall = require("classes/GolfBall")
@@ -157,15 +158,16 @@ function Game.Scoreboard()
 
     love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
 
-    for i = 1, 4 do
+    -- draw up to 4 clients from the scores table
+    local row = 0
+    for client_id, score in pairs(Game.scores) do
+        row = row + 1
         local padding = 20
-        local next_height = padding + 40 * i
-        love.graphics.print("Client", scoreboard_posX + 10, next_height)
-        love.graphics.print(":", scoreboard_posX + 110, next_height)
-
-        love.graphics.print(i, scoreboard_posX + 95, next_height)
-        -- TODO: print the scores
-        love.graphics.print("0", scoreboard_posX + 120, next_height)
+        local next_height = padding + 40 * row
+        local short_id = tostring(client_id):sub(-4)
+        local line = string.format("Client %s: %s", short_id, tostring(score or 0))
+        love.graphics.print(line, scoreboard_posX + 10, next_height)
+        if row >= 4 then break end
     end
 end
 

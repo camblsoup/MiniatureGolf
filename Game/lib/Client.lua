@@ -78,6 +78,12 @@ function Client.receive_data()
 		if data_type == "goal_reached" then
 			SM.currentScene.golf_balls[data.ball_id].scored = true
 			SM.currentScene.golf_balls[data.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
+			-- Update scoreboard
+			local cid = data.client_scored
+			if cid then
+				SM.currentScene.scores = SM.currentScene.scores or {}
+				SM.currentScene.scores[cid] = (SM.currentScene.scores[cid] or 0) + 1
+			end
 		end
 
 		if data_type == "state_update" then
