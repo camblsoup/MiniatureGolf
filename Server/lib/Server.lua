@@ -29,8 +29,6 @@ function Server.load(port) -- load
 	Server.tick = 0
 	Server.accumulator = 0
 
-	Server.host_id = nil
-
 	Server.start_time = socket.gettime()
 
 	Server.instance = socket.bind("*", port)
@@ -76,6 +74,9 @@ function Server:update(dt)
 end
 
 function Server:fixed_update(dt)
+	if (#Server.clients == 0) then
+		love.event.quit()
+	end
 	Server.receive_data()
 	self.game_world:update(dt)
 	for _, golf_ball in ipairs(self.golf_balls) do
@@ -149,6 +150,7 @@ end
 
 function Server.send_data_to_client(clientObj, data)
 	local jsonString = json.encode(data)
+	--print("Sending: " .. jsonString)
 	local ok = clientObj.socket:send(jsonString .. "\n")
 	if not ok then
 		-- drop silently; removal handled elsewhere when detected
@@ -198,7 +200,7 @@ function Server.receive_data()
 		end
 		local received_data = json.decode(temp_data)
 		if received_data then
-			-- print("Server received data from client:", temp_data)
+			print("Server received data from client:", temp_data)
 
 			local data_type = received_data.type
 			local data = received_data.data
@@ -237,7 +239,7 @@ function Server.receive_data()
 			end
 			if data_type == "start" and received_data.id == Server.clients[1].id then
 				Server.game_start = true
-				Server.send_data_to_all_clients(json.encode({ type = "start", data = nil }) .. "\n")
+				Server.send_data_to_all_clients({ type = "start", data = nil })
 				Server:new_world()
 			end
 			if data_type == "request_setup" then
@@ -299,9 +301,9 @@ function Server:new_world()
 	end
 
 	-- Create obstacles
-	table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height / 2, 10, height)) -- Left wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height / 2, 10, height))  -- Left wall
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width, height / 2, 10, height)) -- Right wall
-	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, 0, width, 10)) -- Top wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, 0, width, 10))    -- Top wall
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, height, width, 10)) -- Bottom wall
 
 	for _, obstacle_data in ipairs(obstacles_data) do

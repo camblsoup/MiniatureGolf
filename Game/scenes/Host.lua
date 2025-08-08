@@ -27,7 +27,7 @@ function HostScene.load()
 			x = 0,
 			y = height - 100,
 			action = function()
-				Client.send_data_to_server({ type = "start" })
+				Client.send_data_to_server({ type = "start", id = Client.client_id })
 			end,
 		},
 		-- return to main menu
@@ -87,12 +87,12 @@ function HostScene.draw()
 	for _, button in pairs(HostScene.buttons) do
 		love.graphics.draw(
 			button.img,
-			button.x, -- x position
-			button.y, -- y position
-			0, -- rotation
+			button.x,                    -- x position
+			button.y,                    -- y position
+			0,                           -- rotation
 			button.width / button.img:getWidth(), -- x scale
 			button.height / button.img:getHeight()
-		) -- y scale
+		)                                -- y scale
 	end
 end
 

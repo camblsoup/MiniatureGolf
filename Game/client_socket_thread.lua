@@ -51,9 +51,10 @@ send_channel:supply("connected")
 while true do
 	local received_data = client:receive("*l")
 	if received_data then
-		-- print("Received data: " .. received_data)
+		--print("Received data: " .. received_data)
 		local received_data = json.decode(received_data)
 		if received_data.type == "shutdown" then
+			client:close()
 			receive_channel:supply(received_data)
 			print("Terminating thread")
 			return
@@ -62,8 +63,7 @@ while true do
 	end
 	local send_data = send_channel:pop()
 	if send_data then
-		-- print("Sending data to server")
-		-- print("Sending: " .. json.encode(send_data))
+		--print("Sending: " .. json.encode(send_data))
 		client:send(json.encode(send_data) .. "\n")
 		if send_data.type == "shutdown" then
 			print("Sent shutdown")

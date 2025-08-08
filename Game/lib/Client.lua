@@ -35,7 +35,7 @@ function Client.receive_data()
 	local receive_channel = love.thread.getChannel("receive_channel")
 	local received_data = receive_channel:pop()
 	while received_data do
-		print("Client received data:", json.encode(received_data))
+		--print("Client received data:", json.encode(received_data))
 
 		local data_type = received_data.type
 		local data = received_data.data
