@@ -4,15 +4,17 @@ local Game = {
 	golf_balls = {},
 	obstacles = {},
 	current_ball_id = 0,
-	-- scoreboard show/hide buttons
-	scoreboard_buttons = {},
-	is_scoreboard_visible = true,
+  -- scoreboard show/hide buttons
+  scoreboard_buttons = {},
+  is_scoreboard_visible = true,
+  scores = {}, -- client_id -> score
 }
 
 local GolfBall = require("classes/GolfBall")
 local Obstacle = require("classes/Obstacle")
 local Goal = require("classes/Goal")
 local Client = require("lib/Client")
+local SM = require("lib/sceneManager")
 
 -- scoreboard variables
 local scoreboard_font = love.graphics.newFont("assets/dogicapixelbold.ttf", 15)
@@ -60,7 +62,7 @@ function Game.update(dt)
 	Game.game_world:update(dt)
 
 	if love.mouse.isDown(1) then
-		for _, golf_ball in ipairs(Game.golf_balls) do
+		for _, golf_ball in ipairs((SM.currentScene and SM.currentScene.golf_balls) or Game.golf_balls) do
 			golf_ball:aim(Game, love.mouse.getX(), love.mouse.getY())
 		end
 	end
@@ -75,7 +77,7 @@ function Game.draw()
 	for _, obstacle in ipairs(Game.obstacles) do
 		obstacle:draw()
 	end
-	for _, golf_ball in ipairs(Game.golf_balls) do
+	for _, golf_ball in ipairs((SM.currentScene and SM.currentScene.golf_balls) or Game.golf_balls) do
 		golf_ball:display()
 	end
 
@@ -122,8 +124,11 @@ function Game.mousereleased(x, y, button)
 	end
 
 	Game.current_ball_id = 0
-	for _, golf_ball in ipairs(Game.golf_balls) do
+	for _, golf_ball in ipairs((SM.currentScene and SM.currentScene.golf_balls) or Game.golf_balls) do
 		if golf_ball.is_aiming and golf_ball.current_shooter_id == 0 and not golf_ball:isMoving() then
+			-- stop drawing the aim line immediately; apply local movement for responsiveness
+			golf_ball.is_aiming = false
+			golf_ball:shoot(golf_ball.shooting_magnitude, golf_ball.shooting_angle)
 			Client.send_data_to_server({
 				type = "shoot",
 				client_id = Client.client_id,
@@ -200,16 +205,17 @@ function Game.Scoreboard()
 
 	love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
 
-	for i = 1, 4 do
-		local padding = 20
-		local next_height = padding + 40 * i
-		love.graphics.print("Client", scoreboard_posX + 10, next_height)
-		love.graphics.print(":", scoreboard_posX + 110, next_height)
-
-		love.graphics.print(i, scoreboard_posX + 95, next_height)
-		-- TODO: print the scores
-		love.graphics.print("0", scoreboard_posX + 120, next_height)
-	end
+    -- draw up to 4 clients from the scores table
+    local row = 0
+    for client_id, score in pairs(Game.scores) do
+        row = row + 1
+        local padding = 20
+        local next_height = padding + 40 * row
+        local short_id = tostring(client_id):sub(-4)
+        local line = string.format("Client %s: %s", short_id, tostring(score or 0))
+        love.graphics.print(line, scoreboard_posX + 10, next_height)
+        if row >= 4 then break end
+    end
 end
 
 ------------------------------------------------------------------------------------
