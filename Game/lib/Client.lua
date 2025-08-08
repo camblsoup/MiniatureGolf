@@ -36,6 +36,9 @@ function Client.receive_data()
 	local received_data = receive_channel:pop()
 	if received_data == "exit" then
 		love.event.quit()
+	elseif received_data == "start" then
+		SM.loadScene("Game")
+		return
 	end
 	while received_data do
 		local data_type = received_data.type

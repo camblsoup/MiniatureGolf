@@ -220,8 +220,8 @@ function Server.receive_data()
 				love.event.quit()
 			end
 			if i == 1 and data_type == "start" then
-				print("Starting game")
 				Server.game_start = true
+				Server.send_data_to_all_clients("start")
 				Server:new_world()
 			end
 		end
