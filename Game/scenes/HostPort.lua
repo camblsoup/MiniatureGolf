@@ -24,9 +24,17 @@ local fontPort = love.graphics.newFont("assets/dogicapixelbold.ttf", 35)
 
 local width, height = love.graphics.getDimensions()
 
+local startServerCoroutine = nil
+local isStartingServer = nil
+local isErrorMessageVisible = nil
+local startResult = nil
+
 function HostPort.load()
 	love.graphics.setFont(fontPort)
 	text = "" or text
+
+	isStartingServer = false
+	isErrorMessageVisible = false
 
 	HostPort.buttons = {
 		createGame = {
@@ -40,13 +48,25 @@ function HostPort.load()
 				else
 					os.execute("love ../Server/ " .. port .. " --console &")
 				end
-				local connected, err = Client.load("127.0.0.1", port)
-				if connected then
-					print("connected to server")
-					SM.loadScene("Host")
-				else
-					print("Could not start server: " .. err)
-				end
+
+				isStartingServer = true
+				isErrorMessageVisible = false
+
+				startServerCoroutine = coroutine.create(function()
+					coroutine.yield() -- yield so main loop can draw
+					local words = {}
+					for split in string.gmatch(text, "([^:]+)") do
+						table.insert(words, split)
+					end
+
+					local connected, err = Client.load("127.0.0.1", port)
+
+					if connected then
+						startResult = "success"
+					else
+						startResult = err or "unknown error"
+					end
+				end)
 			end,
 		},
 		back = {
@@ -72,18 +92,45 @@ function HostPort.load()
 	end
 end
 
+function HostPort.update(dt)
+	if startServerCoroutine then
+		local status, res = coroutine.resume(startServerCoroutine)
+		if not status then
+			-- Coroutine error
+			print("Start server coroutine error:", res)
+			isStartingServer = false
+			isErrorMessageVisible = true
+			startServerCoroutine = nil
+		elseif coroutine.status(startServerCoroutine) == "dead" then
+			-- Coroutine finished
+			if startResult == "success" then
+				if text == "" then
+					SM.host_port = "7777"
+				else
+					SM.host_port = text
+				end
+				SM.loadScene("Host")
+			else
+				isStartingServer = false
+				isErrorMessageVisible = true
+			end
+			startServerCoroutine = nil
+		end
+	end
+end
+
 function HostPort.draw()
 	HostPort.Port()
 
 	for _, button in pairs(HostPort.buttons) do
 		love.graphics.draw(
 			button.img,
-			button.x,                          -- x position
-			button.y,                          -- y position
-			0,                                 -- rotation
+			button.x, -- x position
+			button.y, -- y position
+			0, -- rotation
 			button.width / button.img:getWidth(), -- x scale
 			button.height / button.img:getHeight()
-		)                                    -- y scale
+		) -- y scale
 	end
 
 	-- textbox
@@ -96,6 +143,27 @@ function HostPort.draw()
 	-- text
 	love.graphics.printf(text, box.x + box.pad, box.y + box.pad, box.w - box.pad * 2, "left")
 	love.graphics.setScissor()
+
+	love.graphics.setFont(fontText, width)
+	-- Starting Server message
+	if isStartingServer then
+		HostPort.starting()
+	end
+
+	-- error message
+	love.graphics.setColor(255, 0, 0) -- set error message to red
+	if isErrorMessageVisible then
+		HostPort.ServerFailed()
+	end
+	love.graphics.setColor(255, 255, 255) -- set it back to white
+end
+
+function HostPort.ServerFailed()
+	love.graphics.printf("The server failed to start", 0, height - 200, love.graphics.getWidth(), "center")
+end
+
+function HostPort.starting()
+	love.graphics.printf("Starting server...", 0, height - 200, love.graphics.getWidth(), "center")
 end
 
 --------------------------------------------------------------------------

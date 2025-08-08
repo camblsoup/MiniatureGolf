@@ -29,6 +29,8 @@ function Server.load(port) -- load
 	Server.tick = 0
 	Server.accumulator = 0
 
+	Server.start_time = socket.gettime()
+
 	Server.instance = socket.bind("127.0.0.1", port)
 	Server.instance:settimeout(0)
 	print("Server started")
@@ -36,6 +38,9 @@ end
 
 function Server.listen()
 	Server.receive_data()
+	if (not Server.clients or #Server.clients == 0) and socket.gettime() - Server.start_time > 5 then
+		love.event.quit()
+	end
 	if not Server.clients or #Server.clients < 4 then
 		local client = Server.instance:accept()
 		if client then
@@ -195,6 +200,7 @@ function Server.receive_data()
 		local received_data = json.decode(temp_data)
 		if received_data then
 			-- print("Server received data from client:", temp_data)
+			print("Received: " .. temp_data)
 
 			local data_type = received_data.type
 			local data = received_data.data
