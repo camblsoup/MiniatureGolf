@@ -84,17 +84,17 @@ end
 function HostScene.draw()
 	HostScene.IP()
 
-	love.graphics.print("You are player #" .. Client.player_num)
+	love.graphics.printf("You are player #" .. Client.player_num, 0, height - 200, width, "center")
 
 	for _, button in pairs(HostScene.buttons) do
 		love.graphics.draw(
 			button.img,
-			button.x,                    -- x position
-			button.y,                    -- y position
-			0,                           -- rotation
+			button.x,                          -- x position
+			button.y,                          -- y position
+			0,                                 -- rotation
 			button.width / button.img:getWidth(), -- x scale
 			button.height / button.img:getHeight()
-		)                                -- y scale
+		)                                    -- y scale
 	end
 end
 
