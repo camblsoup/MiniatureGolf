@@ -5,7 +5,7 @@ local json = require("lib/json")
 local GolfBall = require("../classes/GolfBall")
 local Obstacle = require("../classes/Obstacle")
 local Goal = require("../classes/Goal")
--- local levels = require("../levels")
+local levels = require("../levels")
 
 local NUM_BALLS = 4
 local FIXED_DT = 1 / 60
@@ -22,7 +22,7 @@ function Server.load(port) -- load
 		love.event.quit()
 	end
 	math.randomseed(os.time() + socket.gettime())
-	-- Server.level_index = 1
+	Server.level_index = math.random(1, 3)
 	Server.clients = {}
 	Server.client_sockets = {}
 
@@ -101,42 +101,6 @@ function Server:fixed_update(dt)
 	if self.tick % 4 == 0 then
 		self.broadcast_state()
 	end
-end
-
-function Server:new_world()
-	local width = 1000
-	local height = 600
-
-	self.obstacles = {}
-	self.points = {}
-	for i, client in ipairs(self.clients) do
-		self.points[client.id] = 0
-	end
-	self.game_world = love.physics.newWorld(0, 0, true)
-	self.goal = Goal.new(self.game_world, width / 2, height / 2)
-	self.golf_balls = {}
-	self.num_golf_balls = NUM_BALLS
-
-	local client_balls_data = {}
-
-	for i = 1, NUM_BALLS do
-		local x = math.random(width * 0.1, width * 0.9)
-		local y = math.random(height * 0.1, height * 0.9)
-		local new_golf_ball = GolfBall.new(self.game_world, i, x, y, true)
-		table.insert(self.golf_balls, new_golf_ball)
-		table.insert(client_balls_data, { ball_id = i, x = x, y = y })
-	end
-	self.obstacles = {}
-	table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height / 2, 10, height)) -- Left wall
-	table.insert(self.obstacles, Obstacle.new(self.game_world, width, height / 2, 10, height)) -- Right wall
-	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, 0, width, 10)) -- Top wall
-	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, height, width, 10)) -- Bottom wall
-	Server.send_data_to_all_clients({
-		type = "setup",
-		data = {
-			golf_balls = client_balls_data,
-		},
-	})
 end
 
 function Server.broadcast_state()
@@ -227,6 +191,70 @@ function Server.receive_data()
 		end
 		::continue::
 	end
+end
+
+function Server:new_world()
+	local width = 1000
+	local height = 600
+
+	-- General setup
+	self.points = {}
+	for i, client in ipairs(self.clients) do
+		self.points[client.id] = 0
+	end
+	self.game_world = love.physics.newWorld(0, 0, true)
+
+	-- Extra level data
+	local new_level_data = levels[Server.level_index]
+	local balls_data = new_level_data.balls
+	local goal_data = new_level_data.goal
+	local obstacles_data = new_level_data.obstacles
+	Server.level_index = (Server.level_index % 3) + 1
+
+	-- Initialize game world data
+	self.goal = Goal.new(self.game_world, goal_data.x, goal_data.y)
+	self.golf_balls = {}
+	self.num_golf_balls = NUM_BALLS
+	self.obstacles = {}
+
+	-- Initialize client data
+	local client_level_data = {}
+	client_level_data.goal_data = {x = goal_data.x, y = goal_data.y}
+	client_level_data.balls_data = {}
+	client_level_data.obstacles_data = {}
+
+	-- Create balls
+	for i = 1, NUM_BALLS do
+		local spawn_index =  ((i - 1) % 4) + 1
+		local spawn_area = balls_data[spawn_index]
+		
+		local angle = math.random() * 2 * math.pi
+		local dist = math.sqrt(math.random()) * spawn_area.radius
+		local x = spawn_area.x + dist * math.cos(angle)
+		local y = spawn_area.y + dist * math.sin(angle)
+
+		table.insert(self.golf_balls, GolfBall.new(self.game_world, i, x, y))
+		table.insert(client_level_data.balls_data, { ball_id = i, x = x, y = y })
+	end
+
+	-- Create obstacles
+	table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height / 2, 10, height)) -- Left wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, width, height / 2, 10, height)) -- Right wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, 0, width, 10)) -- Top wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, height, width, 10)) -- Bottom wall
+
+	for _, obstacle_data in ipairs(obstacles_data) do
+		table.insert(self.obstacles, Obstacle.new(self.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height))
+		table.insert(client_level_data.obstacles_data, 
+		{x = obstacle_data.x, y = obstacle_data.y, width = obstacle_data.width, height = obstacle_data.height})
+	end
+
+	Server.send_data_to_all_clients({
+		type = "setup",
+		data = {
+			level_data = client_level_data,
+		},
+	})
 end
 
 return Server

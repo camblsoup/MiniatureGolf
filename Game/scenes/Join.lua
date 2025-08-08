@@ -161,7 +161,7 @@ end
 
 function JoinScene.errorMessageVisible()
 	isErrorMessageVisible = true
-	timer = 7
+	timer = 20
 end
 
 function JoinScene.timer(dt)

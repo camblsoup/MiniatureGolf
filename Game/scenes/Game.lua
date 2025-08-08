@@ -1,9 +1,8 @@
 local Game = {
 	game_world = nil,
-	-- obstacles_data = {},
-	obstacles = {},
 	goal = nil,
 	golf_balls = {},
+	obstacles = {},
 	current_ball_id = 0,
     -- scoreboard show/hide buttons
     scoreboard_buttons = {},
@@ -29,8 +28,6 @@ local button_height = 20
 local flag
 
 function Game.load()
-	Game.new_world()
-
     Game.scoreboard_buttons = {
         show = {
             img = love.graphics.newImage("assets/img/showButton.png"),
@@ -54,6 +51,8 @@ function Game.load()
 end
 
 function Game.update(dt)
+    if not Game.game_world then return end
+
 	Game.game_world:update(dt)
 
 	if love.mouse.isDown(1) then
@@ -64,6 +63,8 @@ function Game.update(dt)
 end
 
 function Game.draw()
+    if not Game.game_world then return end
+
 	Game.goal:draw()
 	for _, obstacle in ipairs(Game.obstacles) do
 		obstacle:draw()
@@ -109,7 +110,7 @@ function Game.mousereleased(x, y, button)
 		return
 	end
 
-	Game.current_ball_id = 0
+    Game.current_ball_id = 0
 	for _, golf_ball in ipairs(Game.golf_balls) do
 		if golf_ball.is_aiming and golf_ball.current_shooter_id == 0 and not golf_ball:isMoving() then
 			Client.send_data_to_server({
@@ -126,16 +127,35 @@ function Game.mousereleased(x, y, button)
 	end
 end
 
-function Game.new_world()
+function Game.new_world(level_data)
+    -- General setup
 	local width = love.graphics.getWidth()
 	local height = love.graphics.getHeight()
 	Game.game_world = love.physics.newWorld(0, 0, true)
-	Game.goal = Goal.new(Game.game_world, width / 2, height / 2)
-	Game.obstacles = {}
+
+    -- Extra level data components
+    local goal_data = level_data.goal_data
+    local balls_data = level_data.balls_data
+    local obstacles_data = level_data.obstacles_data
+
+	Game.goal = Goal.new(Game.game_world, goal_data.x, goal_data.y)
+
+    -- Create balls
+    Game.golf_balls = {}
+	for i, ball_data in ipairs(balls_data) do
+        table.insert(Game.golf_balls, GolfBall.new(Game.game_world, ball_data.ball_id, ball_data.x, ball_data.y))
+    end
+
+    -- Create obstacles
+    Game.obstacles = {}
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, 0, height / 2, 10, height)) -- Left wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width, height / 2, 10, height)) -- Right wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, 0, width, 10)) -- Top wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, height, width, 10)) -- Bottom wall
+
+    for _, obstacle_data in ipairs(obstacles_data) do
+        table.insert(Game.obstacles, Obstacle.new(Game.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height))
+    end
 end
 
 ------------------------------------------------------------------------------------

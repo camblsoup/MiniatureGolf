@@ -51,12 +51,7 @@ function Client.receive_data()
 		end
 
 		if data_type == "setup" then
-			SM.currentScene.golf_balls = {}
-			for _, golf_ball_data in ipairs(data.golf_balls) do
-				local golf_ball =
-					GolfBall.new(SM.currentScene.game_world, golf_ball_data.ball_id, golf_ball_data.x, golf_ball_data.y)
-				table.insert(SM.currentScene.golf_balls, golf_ball)
-			end
+			SM.currentScene.new_world(data.level_data)
 		end
 
 		if data_type == "shoot" then
