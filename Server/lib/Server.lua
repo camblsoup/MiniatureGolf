@@ -7,7 +7,7 @@ local Obstacle = require("../classes/Obstacle")
 local Goal = require("../classes/Goal")
 local levels = require("../levels")
 
-local NUM_BALLS = 4
+local NUM_BALLS = 16
 local FIXED_DT = 1 / 60
 local COLORS = {
 	{ 1, 0, 0 },
