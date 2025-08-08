@@ -1,3 +1,4 @@
+-- Client networking: runs a socket thread and applies server messages
 local Client = {
 	client_id = 1,
 	receive_thread = nil,
@@ -12,6 +13,8 @@ local json = require("lib/json")
 
 local server = nil
 
+-- Start socket thread; wait for connection status
+
 function Client.load(host, port)
 	Client.socket_thread = love.thread.newThread("client_socket_thread.lua")
 	Client.socket_thread:start(host, port)
@@ -23,14 +26,17 @@ function Client.load(host, port)
 	end
 end
 
+-- Poll incoming messages once per frame
 function Client.update(dt)
 	Client.receive_data()
 end
 
+-- Queue an outgoing message for the socket thread
 function Client.send_data_to_server(data)
 	love.thread.getChannel("send_channel"):push(data)
 end
 
+-- Handle messages from the network thread and update the scene
 function Client.receive_data()
 	local receive_channel = love.thread.getChannel("receive_channel")
 	local received_data = receive_channel:pop()
@@ -40,26 +46,31 @@ function Client.receive_data()
 		local data_type = received_data.type
 		local data = received_data.data
 
+		-- Quit
 		if data_type == "shutdown" then
 			print("Exiting")
 			Client.socket_thread:wait()
 			love.event.quit()
 		end
 
+		-- Switch to Game scene
 		if data_type == "start" then
 			SM.loadScene("Game")
 			return
 		end
 
+		-- Save our id and color
 		if data_type == "id" then
 			Client.client_id = data.id
 			Client.color = data.color
 		end
 
+		-- Build the world from server data
 		if data_type == "setup" then
 			SM.currentScene.new_world(data.level_data)
 		end
 
+		-- Apply shot
 		if data_type == "shoot" then
 			local golf_ball = SM.currentScene.golf_balls[data.ball_id]
 			golf_ball.current_shooter_id = data.client_id
@@ -67,17 +78,20 @@ function Client.receive_data()
 			golf_ball:shoot(data.shooting_magnitude, data.shooting_angle)
 		end
 
+		-- Stop ball and snap to server position
 		if data_type == "finish_shoot" then
 			local golf_ball = SM.currentScene.golf_balls[data.ball_id]
 			golf_ball.body:setPosition(data.x, data.y)
 			golf_ball:finish_ball_shoot()
 		end
 
+		-- Mark scored and hide the ball
 		if data_type == "goal_reached" then
 			SM.currentScene.golf_balls[data.ball_id].scored = true
 			SM.currentScene.golf_balls[data.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
 		end
 
+		-- Sync positions/velocities
 		if data_type == "state_update" then
 			local ball_states = data.balls
 			for i, ball_data in ipairs(ball_states) do

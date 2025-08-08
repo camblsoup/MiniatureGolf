@@ -28,6 +28,7 @@ function SceneManager.loadScene(sceneName)
 	SceneManager.currentScene = scene
 end
 
+-- Remove a previously required scene module from Lua's cache
 function SceneManager.unloadScene(sceneName)
 	assert(type(sceneName) == "string", "Function 'unloadScene': parameter must be a string")
 	assert(love.filesystem.getInfo(sceneName .. ".lua"), "Function 'unloadScene': scene file not found")
@@ -37,6 +38,7 @@ function SceneManager.unloadScene(sceneName)
 	end
 end
 
+-- Forward per-frame updates to the current scene
 function SceneManager.update(dt)
 	assert(type(dt) == "number", "Function 'update': parameter must be a number")
 	if SceneManager.currentScene and SceneManager.currentScene.update then
@@ -44,6 +46,7 @@ function SceneManager.update(dt)
 	end
 end
 
+-- Forward drawing to the current scene
 function SceneManager.draw()
 	assert(
 		SceneManager.currentScene.draw,
@@ -53,18 +56,21 @@ function SceneManager.draw()
 	SceneManager.currentScene.draw()
 end
 
+-- Forward mouse press to the current scene
 function SceneManager.mousepressed(x, y, button)
 	if SceneManager.currentScene and SceneManager.currentScene.mousepressed then
 		SceneManager.currentScene.mousepressed(x, y, button)
 	end
 end
 
+-- Forward mouse release to the current scene
 function SceneManager.mousereleased(x, y, button)
 	if SceneManager.currentScene and SceneManager.currentScene.mousereleased then
 		SceneManager.currentScene.mousereleased(x, y, button)
 	end
 end
 
+-- Forward keypresses to the current scene
 function SceneManager.keypressed(key)
 	if SceneManager.currentScene and SceneManager.currentScene.keypressed then
 		SceneManager.currentScene.keypressed(key)
