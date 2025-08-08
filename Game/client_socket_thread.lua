@@ -56,7 +56,6 @@ while true do
 		if received_data.type == "shutdown" then
 			client:close()
 			receive_channel:supply(received_data)
-			print("Terminating thread")
 			return
 		end
 		receive_channel:push(received_data)
@@ -65,9 +64,6 @@ while true do
 	if send_data then
 		--print("Sending: " .. json.encode(send_data))
 		client:send(json.encode(send_data) .. "\n")
-		if send_data.type == "shutdown" then
-			print("Sent shutdown")
-		end
 	end
 
 	socket.sleep(0.01)

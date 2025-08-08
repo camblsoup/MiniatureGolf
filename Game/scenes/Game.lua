@@ -4,10 +4,10 @@ local Game = {
 	golf_balls = {},
 	obstacles = {},
 	current_ball_id = 0,
-  -- scoreboard show/hide buttons
-  scoreboard_buttons = {},
-  is_scoreboard_visible = true,
-  scores = {}, -- client_id -> score
+	-- scoreboard show/hide buttons
+	scoreboard_buttons = {},
+	is_scoreboard_visible = true,
+	scores = {}, -- client_id -> score
 }
 
 local GolfBall = require("classes/GolfBall")
@@ -144,7 +144,6 @@ function Game.mousereleased(x, y, button)
 end
 
 local function beginContact(fixtureA, fixtureB, contact)
-	print("Collision")
 	local dataA = fixtureA:getUserData()
 	local dataB = fixtureB:getUserData()
 
@@ -176,9 +175,9 @@ function Game.new_world(level_data)
 
 	-- Create obstacles
 	Game.obstacles = {}
-	table.insert(Game.obstacles, Obstacle.new(Game.game_world, 0, height / 2, 10, height)) -- Left wall
+	table.insert(Game.obstacles, Obstacle.new(Game.game_world, 0, height / 2, 10, height))  -- Left wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width, height / 2, 10, height)) -- Right wall
-	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, 0, width, 10)) -- Top wall
+	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, 0, width, 10))    -- Top wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, height, width, 10)) -- Bottom wall
 
 	for _, obstacle_data in ipairs(obstacles_data) do
@@ -205,17 +204,17 @@ function Game.Scoreboard()
 
 	love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
 
-    -- draw up to 4 clients from the scores table
-    local row = 0
-    for client_id, score in pairs(Game.scores) do
-        row = row + 1
-        local padding = 20
-        local next_height = padding + 40 * row
-        local short_id = tostring(client_id):sub(-4)
-        local line = string.format("Client %s: %s", short_id, tostring(score or 0))
-        love.graphics.print(line, scoreboard_posX + 10, next_height)
-        if row >= 4 then break end
-    end
+	-- draw up to 4 clients from the scores table
+	local row = 0
+	for client_id, score in pairs(Game.scores) do
+		row = row + 1
+		local padding = 20
+		local next_height = padding + 40 * row
+		local short_id = tostring(client_id):sub(-4)
+		local line = string.format("Player %s: %s", row, tostring(score or 0))
+		love.graphics.print(line, scoreboard_posX + 10, next_height)
+		if row >= 4 then break end
+	end
 end
 
 ------------------------------------------------------------------------------------
