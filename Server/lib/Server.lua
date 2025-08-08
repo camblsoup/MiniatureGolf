@@ -31,7 +31,7 @@ function Server.load(port) -- load
 
 	Server.start_time = socket.gettime()
 
-	Server.instance = socket.bind("127.0.0.1", port)
+	Server.instance = socket.bind("*", port)
 	Server.instance:settimeout(0)
 	print("Server started")
 end
@@ -224,15 +224,15 @@ function Server:new_world()
 
 	-- Initialize client data
 	local client_level_data = {}
-	client_level_data.goal_data = {x = goal_data.x, y = goal_data.y}
+	client_level_data.goal_data = { x = goal_data.x, y = goal_data.y }
 	client_level_data.balls_data = {}
 	client_level_data.obstacles_data = {}
 
 	-- Create balls
 	for i = 1, NUM_BALLS do
-		local spawn_index =  ((i - 1) % 4) + 1
+		local spawn_index = ((i - 1) % 4) + 1
 		local spawn_area = balls_data[spawn_index]
-		
+
 		local angle = math.random() * 2 * math.pi
 		local dist = math.sqrt(math.random()) * spawn_area.radius
 		local x = spawn_area.x + dist * math.cos(angle)
@@ -249,9 +249,14 @@ function Server:new_world()
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, height, width, 10)) -- Bottom wall
 
 	for _, obstacle_data in ipairs(obstacles_data) do
-		table.insert(self.obstacles, Obstacle.new(self.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height))
-		table.insert(client_level_data.obstacles_data, 
-		{x = obstacle_data.x, y = obstacle_data.y, width = obstacle_data.width, height = obstacle_data.height})
+		table.insert(
+			self.obstacles,
+			Obstacle.new(self.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height)
+		)
+		table.insert(
+			client_level_data.obstacles_data,
+			{ x = obstacle_data.x, y = obstacle_data.y, width = obstacle_data.width, height = obstacle_data.height }
+		)
 	end
 
 	Server.send_data_to_all_clients({

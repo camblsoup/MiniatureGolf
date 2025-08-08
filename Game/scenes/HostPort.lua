@@ -59,7 +59,7 @@ function HostPort.load()
 						table.insert(words, split)
 					end
 
-					local connected, err = Client.load("*", port)
+					local connected, err = Client.load("127.0.0.1", port)
 
 					if connected then
 						startResult = "success"
