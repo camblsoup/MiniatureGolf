@@ -46,7 +46,6 @@ function Server.listen()
 		if client then
 			client:settimeout(0)
 			local clientObj = {
-				socket = client,
 				id = math.random(10, 9999999999),
 			}
 			table.insert(Server.clients, clientObj)
@@ -131,10 +130,12 @@ end
 function Server.send_data_to_all_clients(data)
 	local jsonString = json.encode(data)
 	--print("Sending data: " .. jsonString)
-	for i, client in ipairs(Server.clients) do
-		local success, err = client.socket:send(jsonString .. "\n")
+	for i, client in ipairs(Server.client_sockets) do
+		local success, err = client:send(jsonString .. "\n")
 		if not success then
+			client:close()
 			table.remove(Server.clients, i)
+			table.remove(Server.client_sockets, i)
 		end
 	end
 end
@@ -184,13 +185,25 @@ function Server.receive_data()
 				})
 			end
 
-			if i == 1 and data_type == "shutdown" then
-				Server.send_data_to_all_clients("exit")
-				love.event.quit()
+			if data_type == "shutdown" then
+				if received_data.id == Server.clients[1].id then
+					Server.send_data_to_all_clients({ type = "shutdown", data = nil })
+					love.event.quit()
+				else
+					for j, client in ipairs(Server.clients) do
+						if client.id == received_data.id then
+							Server.client_sockets[j]:send(json.encode({ type = "shutdown", data = nil }) .. "\n")
+							print("Client disconnected: " .. Server.clients[j].id)
+							table.remove(Server.clients, j)
+							Server.client_sockets[j]:close()
+							table.remove(Server.client_sockets, j)
+						end
+					end
+				end
 			end
-			if i == 1 and data_type == "start" then
+			if data_type == "start" and received_data.id == Server.clients[1].id then
 				Server.game_start = true
-				Server.send_data_to_all_clients("start")
+				Server.send_data_to_all_clients(json.encode({ type = "start", data = nil }) .. "\n")
 				Server:new_world()
 			end
 		end

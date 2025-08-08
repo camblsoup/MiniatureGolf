@@ -34,16 +34,22 @@ end
 function Client.receive_data()
 	local receive_channel = love.thread.getChannel("receive_channel")
 	local received_data = receive_channel:pop()
-	if received_data == "exit" then
-		love.event.quit()
-	elseif received_data == "start" then
-		SM.loadScene("Game")
-		return
-	end
 	while received_data do
+		print("Client received data:", json.encode(received_data))
+
 		local data_type = received_data.type
 		local data = received_data.data
-		--print("Client received data:", received_data)
+
+		if data_type == "shutdown" then
+			print("Exiting")
+			Client.socket_thread:wait()
+			love.event.quit()
+		end
+
+		if data_type == "start" then
+			SM.loadScene("Game")
+			return
+		end
 
 		if data_type == "id" then
 			Client.client_id = data.id
