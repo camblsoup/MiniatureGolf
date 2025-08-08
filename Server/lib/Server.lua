@@ -200,7 +200,7 @@ function Server.receive_data()
 		end
 		local received_data = json.decode(temp_data)
 		if received_data then
-			print("Server received data from client:", temp_data)
+			--print("Server received data from client:", temp_data)
 
 			local data_type = received_data.type
 			local data = received_data.data
