@@ -20,7 +20,6 @@ local timer = 0
 
 local JoinScene = {
 	buttons = {},
-
 }
 -------------------------------------------------------------
 function JoinScene.load()
@@ -41,6 +40,8 @@ function JoinScene.load()
 			x = 0,
 			y = 450,
 			action = function()
+				isErrorMessageVisible = false
+				timer = 0
 				local words = {}
 				for split in string.gmatch(text, "([^:]+)") do
 					table.insert(words, split)
@@ -79,12 +80,12 @@ function JoinScene.draw()
 	for _, button in pairs(JoinScene.buttons) do
 		love.graphics.draw(
 			button.img,
-			button.x,                          -- x position
-			button.y,                          -- y position
-			0,                                 -- rotation
+			button.x, -- x position
+			button.y, -- y position
+			0, -- rotation
 			button.width / button.img:getWidth(), -- x scale
 			button.height / button.img:getHeight()
-		)                                    -- y scale
+		) -- y scale
 	end
 
 	love.graphics.printf("Join with the host's IP and port number", 0, 100, love.graphics.getWidth(), "center")
@@ -149,7 +150,13 @@ function JoinScene.keypressed(key)
 end
 
 function JoinScene.invalidLobby()
-	love.graphics.printf("The IP/port you have inputted is invalid", 0, height - 250, love.graphics.getWidth(), "center")
+	love.graphics.printf(
+		"The IP/port you have inputted is invalid",
+		0,
+		height - 250,
+		love.graphics.getWidth(),
+		"center"
+	)
 end
 
 function JoinScene.errorMessageVisible()

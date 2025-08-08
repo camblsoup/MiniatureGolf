@@ -17,22 +17,34 @@ if not port or type(port) ~= "number" then
 end
 
 local client
-local success, err = false, nil
 local start_time = socket.gettime()
+local max_attempts_per_loop = 3
+local connected = false
+
 while true do
-	client = assert(socket.tcp())
-	client:settimeout(1)
-	success, err = client:connect(host, port)
-	if success or err == "already connected" or client:getpeername() then
+	for attempt = 1, max_attempts_per_loop do
+		client = assert(socket.tcp())
+		client:settimeout(1)
+		local success, err = client:connect(host, port)
+		if success or err == "already connected" then
+			connected = true
+			break
+		end
+		client:close()
+		socket.sleep(0.01)
+	end
+
+	if connected then
 		break
 	end
+
 	if socket.gettime() - start_time > 8 then
-		client:close()
+		-- If timeout reached without success
 		send_channel:supply("Could not connect to server")
 		return
 	end
-	client:close()
-	socket.sleep(0.01)
+
+	socket.sleep(0.05) -- small pause before retrying full loop
 end
 send_channel:supply("connected")
 
