@@ -221,7 +221,7 @@ end
 function Game.Scoreboard()
 	love.graphics.setFont(scoreboard_font)
 
-	scoreboard_height = 50 + (30 * #Game.scores)
+	scoreboard_height = 50 + (35 * #Game.scores)
 
 	-- black background
 	love.graphics.setColor(0, 0, 0)

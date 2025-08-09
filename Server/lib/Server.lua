@@ -108,6 +108,9 @@ function Server:fixed_update(dt)
 			self.golf_balls[golf_ball.ball_id].scored = true
 			self.golf_balls[golf_ball.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
 			self.num_golf_balls = self.num_golf_balls - 1
+			if not self.scores[Server.clients[golf_ball.current_shooter_id].player_num] then
+				goto continue
+			end
 			self.scores[Server.clients[golf_ball.current_shooter_id].player_num] = self.scores
 				[Server.clients[golf_ball.current_shooter_id].player_num] + 1
 			Server.send_data_to_all_clients({
@@ -122,6 +125,7 @@ function Server:fixed_update(dt)
 				self:new_world()
 			end
 		end
+		::continue::
 	end
 	if self.tick % 4 == 0 then
 		self.broadcast_state()
