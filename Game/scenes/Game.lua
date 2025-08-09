@@ -79,12 +79,13 @@ function Game.update(dt)
 	if love.mouse.isDown(1) then
 		for _, golf_ball in ipairs((SM.currentScene and SM.currentScene.golf_balls) or Game.golf_balls) do
 			if golf_ball:aim(Game, love.mouse.getX(), love.mouse.getY()) then
+				-- Send "grab" event to the server when the player starts aiming a ball
 				Client.send_data_to_server({
-					type = "grab",
+					type = "grab", -- Tells the server that the player is aiming a ball
 					data = {
-						ball_id = golf_ball.ball_id,
-						color = Client.color,
-						client_id = Client.client_id,
+						ball_id = golf_ball.ball_id, -- Which ball is being aimed
+						color = Client.color,        -- Player color for identification
+						client_id = Client.client_id -- Which player is sending this
 					}
 				})
 			end
@@ -155,15 +156,16 @@ function Game.mousereleased(x, y, button)
 	Game.current_ball_id = 0
 	for _, golf_ball in ipairs((SM.currentScene and SM.currentScene.golf_balls) or Game.golf_balls) do
 		if golf_ball.is_aiming and not golf_ball.locked and not golf_ball:isMoving() then
-			-- stop drawing the aim line immediately; apply local movement for responsiveness
+			-- Stop aiming locally and apply movement immediately for responsiveness
 			golf_ball.is_aiming = false
 			golf_ball:shoot(golf_ball.shooting_magnitude, golf_ball.shooting_angle)
+			-- Send "shoot" event to the server so all clients replicate the ball movement
 			Client.send_data_to_server({
-				type = "shoot",
+				type = "shoot", -- Event type for shooting
 				data = {
-					ball_id = golf_ball.ball_id,
-					shooting_magnitude = golf_ball.shooting_magnitude,
-					shooting_angle = golf_ball.shooting_angle,
+					ball_id = golf_ball.ball_id,                       -- Which ball was shot
+					shooting_magnitude = golf_ball.shooting_magnitude, -- Power of the shot
+					shooting_angle = golf_ball.shooting_angle,         -- Direction of the shot
 				},
 			})
 		end
@@ -181,21 +183,25 @@ local function beginContact(fixtureA, fixtureB, contact)
 	end
 end
 
--- Build a local world from level_data received from server
+-- Build a local world from level_data received from the server
 function Game.new_world(level_data)
+	-- Called when the server sends a new level state
+	-- level_data contains goal, balls, and obstacles as sent from the server
+
 	-- General setup
 	local width = love.graphics.getWidth()
 	local height = love.graphics.getHeight()
 	Game.game_world = love.physics.newWorld(0, 0, true)
 
-	-- Extra level data components
+	-- Extract level data from the server payload
 	local goal_data = level_data.goal_data
 	local balls_data = level_data.balls_data
 	local obstacles_data = level_data.obstacles_data
 
+	-- Create the goal using server-provided coordinates
 	Game.goal = Goal.new(Game.game_world, goal_data.x, goal_data.y)
 
-	-- Create balls
+	-- Create balls from the server-provided state
 	Game.golf_balls = {}
 	for i, ball_data in ipairs(balls_data) do
 		table.insert(
@@ -204,7 +210,7 @@ function Game.new_world(level_data)
 		)
 	end
 
-	-- Create obstacles
+	-- Create obstacles (walls + server-sent obstacles)
 	Game.obstacles = {}
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, 0, height / 2, 10, height))  -- Left wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width, height / 2, 10, height)) -- Right wall
@@ -217,6 +223,8 @@ function Game.new_world(level_data)
 			Obstacle.new(Game.game_world, obstacle_data.x, obstacle_data.y, obstacle_data.width, obstacle_data.height)
 		)
 	end
+
+	-- Collision callback is local only, no network traffic
 	Game.game_world:setCallbacks(beginContact, nil, nil, nil)
 end
 
@@ -232,7 +240,7 @@ function Game.Scoreboard()
 	love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
 
 	-- scoreboard text
-	love.graphics.setColor(255, 255, 255) -- Sets the drawing color to red
+	love.graphics.setColor(255, 255, 255)
 	love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
 
 	-- draw up to 4 clients from the scores table
