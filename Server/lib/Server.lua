@@ -22,7 +22,7 @@ function Server.load(port) -- load
 		love.event.quit()
 	end
 	math.randomseed(os.time() + socket.gettime())
-	Server.level_index = 2 --math.random(1, 3)
+	Server.level_index = math.random(1, 3)
 	Server.clients = {}
 	Server.client_count = 0
 	Server.client_sockets = {}
@@ -56,13 +56,15 @@ function Server.listen()
 				player_num = Server.client_count,
 				color = color,
 				score = 0,
-				socket = client
+				socket = client,
 			}
 			Server.clients[clientObj.id] = clientObj
 			table.insert(Server.client_sockets, client)
 
-			client:send(json.encode({ type = "id", data = { id = clientObj.id, color = clientObj.color, player_num = clientObj.player_num } }) ..
-				"\n")
+			client:send(json.encode({
+				type = "id",
+				data = { id = clientObj.id, color = clientObj.color, player_num = clientObj.player_num },
+			}) .. "\n")
 			print("New client connected! ID:", clientObj.id)
 
 			-- If game already running, immediately send current setup/state to late joiner
@@ -83,7 +85,7 @@ function Server:update(dt)
 end
 
 function Server:fixed_update(dt)
-	if (Server.client_count == 0) then
+	if Server.client_count == 0 then
 		love.event.quit()
 	end
 	Server.receive_data()
@@ -167,7 +169,9 @@ function Server.send_data_to_client(clientObj, data)
 end
 
 function Server.send_setup_to_client(clientObj)
-	if not Server.golf_balls then return end
+	if not Server.golf_balls then
+		return
+	end
 	local client_balls_data = {}
 	for _, ball in ipairs(Server.golf_balls) do
 		table.insert(client_balls_data, {
@@ -220,8 +224,8 @@ function Server.receive_data()
 					data = {
 						ball_id = data.ball_id,
 						color = data.color,
-						client_id = data.client_id
-					}
+						client_id = data.client_id,
+					},
 				})
 			end
 
@@ -240,13 +244,14 @@ function Server.receive_data()
 
 			if data_type == "shutdown" then
 				local client_instance = Server.clients[received_data.id]
-				if not client_instance then goto continue end
+				if not client_instance then
+					goto continue
+				end
 				if client_instance.player_num == 1 then
 					Server.send_data_to_all_clients({ type = "shutdown", data = nil })
 					love.event.quit()
 				else
-					client_instance.socket:send(json.encode({ type = "shutdown", data = nil }) ..
-						"\n")
+					client_instance.socket:send(json.encode({ type = "shutdown", data = nil }) .. "\n")
 					print("Client disconnected: " .. client_instance.id)
 					client_instance.socket:close()
 					table.remove(Server.client_sockets, client_instance.player_num)
@@ -255,7 +260,11 @@ function Server.receive_data()
 			end
 			if data_type == "start" and Server.clients[received_data.id].player_num == 1 then
 				Server.game_start = true
-				Server.send_data_to_all_clients({ type = "start", data = nil })
+				local scores = {}
+				for id, client in pairs(Server.clients) do
+					table.insert(scores, client.score)
+				end
+				Server.send_data_to_all_clients({ type = "start", data = { scores = scores } })
 				Server:new_world()
 			end
 			if data_type == "request_setup" then
@@ -317,9 +326,9 @@ function Server:new_world()
 	end
 
 	-- Create obstacles
-	table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height / 2, 10, height))  -- Left wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height / 2, 10, height)) -- Left wall
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width, height / 2, 10, height)) -- Right wall
-	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, 0, width, 10))    -- Top wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, 0, width, 10)) -- Top wall
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, height, width, 10)) -- Bottom wall
 
 	for _, obstacle_data in ipairs(obstacles_data) do

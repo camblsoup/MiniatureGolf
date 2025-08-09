@@ -66,7 +66,7 @@ while true do
 	end
 	local send_data = send_channel:pop()
 	if send_data then
-		print("Sending: " .. json.encode(send_data))
+		--print("Sending: " .. json.encode(send_data))
 		client:send(json.encode(send_data) .. "\n")
 	end
 

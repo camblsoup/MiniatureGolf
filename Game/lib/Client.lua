@@ -49,6 +49,7 @@ function Client.receive_data()
 
 		if data_type == "start" then
 			SM.loadScene("Game")
+			SM.currentScene.scores = data.scores
 			return
 		end
 
