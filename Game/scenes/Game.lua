@@ -218,11 +218,11 @@ function Game.Scoreboard()
 
 	-- black background
 	love.graphics.setColor(0, 0, 0)
-	love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height + 50 * row, 5, 5)
+	love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
 
 	-- scoreboard text
 	love.graphics.setColor(255, 255, 255) -- Sets the drawing color to red
-	love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height + 50 * row, 5, 5)
+	love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
 
 	love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
 
