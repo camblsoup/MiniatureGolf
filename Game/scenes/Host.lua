@@ -89,12 +89,12 @@ function HostScene.draw()
 	for _, button in pairs(HostScene.buttons) do
 		love.graphics.draw(
 			button.img,
-			button.x,                          -- x position
-			button.y,                          -- y position
-			0,                                 -- rotation
+			button.x,                     -- x position
+			button.y,                     -- y position
+			0,                            -- rotation
 			button.width / button.img:getWidth(), -- x scale
-			button.height / button.img:getHeight()
-		)                                    -- y scale
+			button.height / button.img:getHeight() -- y scale
+		)
 	end
 end
 

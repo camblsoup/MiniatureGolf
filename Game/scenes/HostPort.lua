@@ -4,6 +4,7 @@ local Client = require("lib/Client")
 local HostPort = {
 	buttons = {},
 }
+
 local width, height = love.graphics.getDimensions()
 
 local box_w = 200
@@ -22,8 +23,6 @@ local fontTitle = love.graphics.newFont("assets/dogicapixelbold.ttf", 30)
 local fontText = love.graphics.newFont("assets/dogicapixelbold.ttf", 20)
 local fontPort = love.graphics.newFont("assets/dogicapixelbold.ttf", 35)
 
-local width, height = love.graphics.getDimensions()
-
 local startServerCoroutine = nil
 local isStartingServer = nil
 local isErrorMessageVisible = nil
@@ -31,49 +30,68 @@ local startResult = nil
 
 function HostPort.load()
 	love.graphics.setFont(fontPort)
+
+	-- store empty string or text for port input
 	text = "" or text
 
+	-- Starting server... message
 	isStartingServer = false
+
+	-- Server failed to start... message
 	isErrorMessageVisible = false
 
 	HostPort.buttons = {
+		-- create game button
 		createGame = {
 			img = love.graphics.newImage("assets/img/createGameButton.png"),
 			x = 10,
 			y = 10,
 			action = function()
+				-- if host leaves port empty, automatically set it as 7777
 				local port = tonumber(text) or 7777
+
+				-- start the game
 				if jit.os == "Windows" then
 					os.execute("start lovec ../Server/ " .. port)
 				else
 					os.execute("love ../Server/ " .. port .. " --console &")
 				end
 
+				-- activate "server is starting..." message
 				isStartingServer = true
+
+				-- keep the error message hidden
 				isErrorMessageVisible = false
 
+				-- used for join/joined/host to solve window freezes.
 				startServerCoroutine = coroutine.create(function()
 					coroutine.yield() -- yield so main loop can draw
 					local words = {}
+					-- split the text up between the :
 					for split in string.gmatch(text, "([^:]+)") do
+						-- and store the separate values into a table
 						table.insert(words, split)
 					end
 
+					-- connect to the host server on the local IP, and the chosen port.
 					local connected, err = Client.load("127.0.0.1", port)
 
 					if connected then
 						startResult = "success"
 					else
+						-- error handling
 						startResult = err or "unknown error"
 					end
 				end)
 			end,
 		},
+		-- back button
 		back = {
 			img = love.graphics.newImage("assets/img/backButton.png"),
-			x = 10,
-			y = 10,
+			x = 10, -- x position
+			y = 10, -- y position
 			action = function()
+				-- return to main menu
 				SM.loadScene("MainMenu")
 			end,
 		},
@@ -93,24 +111,29 @@ function HostPort.load()
 end
 
 function HostPort.update(dt)
+	-- draws frame to tell client that it is connecting, so begin the co-routine
 	if startServerCoroutine then
 		local status, res = coroutine.resume(startServerCoroutine)
 		if not status then
 			-- Coroutine error
 			print("Start server coroutine error:", res)
-			isStartingServer = false
-			isErrorMessageVisible = true
+			isStartingServer = false -- hide the "starting the server" message
+			isErrorMessageVisible = true -- unhide the "server failed to start" message
 			startServerCoroutine = nil
 		elseif coroutine.status(startServerCoroutine) == "dead" then
 			-- Coroutine finished
 			if startResult == "success" then
+				-- if the host does not pick a custom port, 
 				if text == "" then
 					SM.host_port = "7777"
+				-- otherwise, set the port to the inputted text
 				else
 					SM.host_port = text
 				end
+				-- load the next scene 
 				SM.loadScene("Host")
 			else
+				-- if it fails, display the correct message
 				isStartingServer = false
 				isErrorMessageVisible = true
 			end
@@ -120,17 +143,19 @@ function HostPort.update(dt)
 end
 
 function HostPort.draw()
+	-- instructions
 	HostPort.Port()
 
+	-- button position and size 
 	for _, button in pairs(HostPort.buttons) do
 		love.graphics.draw(
 			button.img,
-			button.x,                          -- x position
-			button.y,                          -- y position
-			0,                                 -- rotation
+			button.x,                    -- x position
+			button.y,                    -- y position
+			0,                           -- rotation
 			button.width / button.img:getWidth(), -- x scale
 			button.height / button.img:getHeight()
-		)                                    -- y scale
+		)                                -- y scale
 	end
 
 	-- textbox
@@ -158,10 +183,12 @@ function HostPort.draw()
 	love.graphics.setColor(255, 255, 255) -- set it back to white
 end
 
+-- failure to start a game message
 function HostPort.ServerFailed()
 	love.graphics.printf("The server failed to start", 0, height - 200, love.graphics.getWidth(), "center")
 end
 
+-- successfully started a game message
 function HostPort.starting()
 	love.graphics.printf("Starting server...", 0, height - 200, love.graphics.getWidth(), "center")
 end
@@ -184,12 +211,13 @@ end
 -- textbox input for port
 -- seems to be a dupe
 function love.textinput(t)
+	-- set a max of 5 characters. Only allow numbers, ., and :
 	if #text < 5 and t:match("[0-9%./:]") then
 		text = text .. t
 	end
 end
 
---
+-- for deleting characters of the text string
 function HostPort.keypressed(key)
 	if key == "backspace" then
 		text = text:sub(1, -2)

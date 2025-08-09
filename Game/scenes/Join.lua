@@ -26,8 +26,13 @@ local JoinScene = {
 -------------------------------------------------------------
 function JoinScene.load()
 	love.graphics.setFont(fontInput)
+
+	-- store the IP and port of the host for the user to join
 	text = "" or text
+
+	-- buttons
 	JoinScene.buttons = {
+		-- return to homescreen
 		back = {
 			img = love.graphics.newImage("assets/img/backButton.png"),
 			x = 10,
@@ -36,7 +41,7 @@ function JoinScene.load()
 				SM.loadScene("MainMenu")
 			end,
 		},
-
+		-- join the game
 		join = {
 			img = love.graphics.newImage("assets/img/joinButton2.png"),
 			x = 0,
@@ -47,8 +52,8 @@ function JoinScene.load()
 					return
 				end
 
-				isConnecting = true
-				isErrorMessageVisible = false
+				isConnecting = true -- message that you are connecting
+				isErrorMessageVisible = false -- hide messages
 
 				connectionCoroutine = coroutine.create(function()
 					coroutine.yield() -- yield so main loop can draw

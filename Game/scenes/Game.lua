@@ -109,6 +109,7 @@ function Game.draw()
 	end
 
 	love.graphics.setColor(1, 1, 1)
+	-- Alternate between the show/hide button when toggling the visibility of the scoreboard.
 	local button = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
 	if Game.is_scoreboard_visible then
 		button.y = scoreboard_posY + scoreboard_height + 10
@@ -124,11 +125,7 @@ function Game.draw()
 		button.height / button.img:getHeight()
 	)
 
-	-- Flag
-	local screen_w = love.graphics.getWidth()
-	local screen_h = love.graphics.getHeight()
-	local flag_w = flag:getWidth()
-	local flag_h = flag:getHeight()
+	-- flag
 	love.graphics.draw(flag, Game.goal.body:getX() - 25, Game.goal.body:getY() - 127)
 end
 
