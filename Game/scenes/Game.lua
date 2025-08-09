@@ -22,9 +22,11 @@ local scoreboard_font = love.graphics.newFont("assets/dogicapixelbold.ttf", 15)
 local scoreboard_posX = love.graphics.getWidth() - 200
 local scoreboard_posY = 20
 local scoreboard_width = 175
-local scoreboard_height = 200
+local scoreboard_height = 75
 local button_width = 75
 local button_height = 20
+local row = 0
+
 
 -- flag
 local flag
@@ -67,11 +69,14 @@ function Game.update(dt)
 				golf_ball:finish_ball_shoot()
 			end
 			if golf_ball:aim(Game, love.mouse.getX(), love.mouse.getY()) then
-				Client.send_data_to_server({ type = "grab", data = {
-					ball_id = golf_ball.ball_id,
-					color = Client.color,
-					client_id = Client.client_id,
-				}})
+				Client.send_data_to_server({
+					type = "grab",
+					data = {
+						ball_id = golf_ball.ball_id,
+						color = Client.color,
+						client_id = Client.client_id,
+					}
+				})
 			end
 		end
 	end
@@ -184,9 +189,9 @@ function Game.new_world(level_data)
 
 	-- Create obstacles
 	Game.obstacles = {}
-	table.insert(Game.obstacles, Obstacle.new(Game.game_world, 0, height / 2, 10, height))  -- Left wall
+	table.insert(Game.obstacles, Obstacle.new(Game.game_world, 0, height / 2, 10, height))    -- Left wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width, height / 2, 10, height)) -- Right wall
-	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, 0, width, 10))    -- Top wall
+	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, 0, width, 10))      -- Top wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, height, width, 10)) -- Bottom wall
 
 	for _, obstacle_data in ipairs(obstacles_data) do
@@ -205,22 +210,24 @@ function Game.Scoreboard()
 
 	-- black background
 	love.graphics.setColor(0, 0, 0)
-	love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+	love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height + 50 * row, 5, 5)
 
 	-- scoreboard text
 	love.graphics.setColor(255, 255, 255) -- Sets the drawing color to red
-	love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
+	love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height + 50 * row, 5, 5)
 
 	love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
 
+	row = 0
 	-- draw up to 4 clients from the scores table
-	local row = 0
 	for client_id, score in pairs(Game.scores) do
 		row = row + 1
 		local padding = 20
 		local next_height = padding + 40 * row
 		local short_id = tostring(client_id):sub(-4)
+		love.graphics.setColor(Client.color)
 		local line = string.format("Player %s: %s", row, tostring(score or 0))
+		love.graphics.setColor(1, 1, 1)
 		love.graphics.print(line, scoreboard_posX + 10, next_height)
 		if row >= 4 then break end
 	end
