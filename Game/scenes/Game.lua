@@ -61,13 +61,21 @@ function Game.update(dt)
 		return
 	end
 
+	for _, golf_ball in ipairs(Game.golf_balls) do
+		for _, golf_ball2 in ipairs(Game.golf_balls) do
+			if golf_ball.body:isTouching(golf_ball2.body) then
+				golf_ball.locked = false
+				golf_ball.color = { 1, 1, 1 }
+				golf_ball2.locked = false
+				golf_ball2.color = { 1, 1, 1 }
+			end
+		end
+	end
+
 	Game.game_world:update(dt)
 
 	if love.mouse.isDown(1) then
 		for _, golf_ball in ipairs((SM.currentScene and SM.currentScene.golf_balls) or Game.golf_balls) do
-			if not golf_ball:isMoving() then
-				golf_ball:finish_ball_shoot()
-			end
 			if golf_ball:aim(Game, love.mouse.getX(), love.mouse.getY()) then
 				Client.send_data_to_server({
 					type = "grab",
