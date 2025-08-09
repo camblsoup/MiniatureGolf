@@ -131,7 +131,7 @@ function Game.mousereleased(x, y, button)
 
 	Game.current_ball_id = 0
 	for _, golf_ball in ipairs((SM.currentScene and SM.currentScene.golf_balls) or Game.golf_balls) do
-		if golf_ball.is_aiming and not golf_ball.locked and not golf_ball:isMoving() then
+		if golf_ball.is_aiming and not golf_ball.locked then
 			-- stop drawing the aim line immediately; apply local movement for responsiveness
 			golf_ball.is_aiming = false
 			golf_ball:shoot(golf_ball.shooting_magnitude, golf_ball.shooting_angle)
