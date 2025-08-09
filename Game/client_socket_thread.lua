@@ -21,6 +21,12 @@ local start_time = socket.gettime()
 local max_attempts_per_loop = 3
 local connected = false
 
+-- Try to connect in small bursts until success or overall timeout
+-- Each outer loop:
+--   - attempts up to `max_attempts_per_loop` quick connects
+--   - breaks if connected
+--   - aborts and reports after ~8s overall
+--   - otherwise, waits briefly and retries
 while true do
 	for attempt = 1, max_attempts_per_loop do
 		client = assert(socket.tcp())

@@ -31,6 +31,7 @@ local row = 0
 -- flag
 local flag
 
+-- Setup scene assets (UI buttons, sounds, flag image)
 function Game.load()
 	Game.scoreboard_buttons = {
 		show = {
@@ -56,6 +57,7 @@ function Game.load()
 	Game.ballHitSfx = love.audio.newSource("sfx/put.wav", "static")
 end
 
+-- Per frame update: step physics and update aim while LMB is held
 function Game.update(dt)
 	if not Game.game_world then
 		return
@@ -90,6 +92,7 @@ function Game.update(dt)
 	end
 end
 
+-- Render world (goal, obstacles, balls) and UI
 function Game.draw()
 	if not Game.game_world then
 		return
@@ -129,6 +132,7 @@ function Game.draw()
 	love.graphics.draw(flag, Game.goal.body:getX() - 25, Game.goal.body:getY() - 127)
 end
 
+-- Handle UI button clicks (show/hide scoreboard)
 function Game.mousepressed(x, y, button)
 	-- left click
 	if button == 1 then
@@ -142,6 +146,7 @@ function Game.mousepressed(x, y, button)
 	end
 end
 
+-- On mouse release, send shoot command for the aimed ball
 function Game.mousereleased(x, y, button)
 	if button ~= 1 then
 		return
@@ -165,6 +170,7 @@ function Game.mousereleased(x, y, button)
 	end
 end
 
+-- Simple collision callback: plays a bump sound on impact
 local function beginContact(fixtureA, fixtureB, contact)
 	local dataA = fixtureA:getUserData()
 	local dataB = fixtureB:getUserData()
@@ -175,6 +181,7 @@ local function beginContact(fixtureA, fixtureB, contact)
 	end
 end
 
+-- Build a local world from level_data received from server
 function Game.new_world(level_data)
 	-- General setup
 	local width = love.graphics.getWidth()
@@ -218,7 +225,7 @@ end
 function Game.Scoreboard()
 	love.graphics.setFont(scoreboard_font)
 
-	scoreboard_height = 50 + (30 * #Game.scores)
+	scoreboard_height = 50 + (35 * #Game.scores)
 
 	-- black background
 	love.graphics.setColor(0, 0, 0)
