@@ -8,9 +8,9 @@ local fontInput = love.graphics.newFont("assets/dogicapixelbold.ttf", 30)
 local width, height = love.graphics.getDimensions()
 local text
 local box = {
-	w = width / 2 + 90,
+	w = width / 2 + 150,
 	h = 50,
-	x = (width - (width / 2 + 90)) / 2,
+	x = (width - (width / 2 + 150)) / 2,
 	y = (height - 50) / 2,
 	pad = 10,
 }
@@ -112,12 +112,12 @@ function JoinScene.draw()
 	for _, button in pairs(JoinScene.buttons) do
 		love.graphics.draw(
 			button.img,
-			button.x, -- x position
-			button.y, -- y position
-			0, -- rotation
+			button.x,                          -- x position
+			button.y,                          -- y position
+			0,                                 -- rotation
 			button.width / button.img:getWidth(), -- x scale
 			button.height / button.img:getHeight()
-		) -- y scale
+		)                                    -- y scale
 	end
 
 	love.graphics.printf("Join with the host's IP and port number", 0, 100, love.graphics.getWidth(), "center")
