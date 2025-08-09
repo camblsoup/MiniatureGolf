@@ -102,3 +102,29 @@ love .
 ```
 
 It is important that you are in the `/Game` folder as the code relies on a valid path to the `/Server` folder
+
+---
+
+# Hosting a game
+
+If you are the host, select "Host Game" and choose a port number. If you leave this blank, port 7777 will be automatically assigned to you. 
+
+When you click "Create game", please wait a moment for a game to start. There will likely be a firewall popup. Please accept this.
+
+Navigate back to Love if your terminal opens up (Please do not close this terminal).
+
+Once you host it, your local IP address will be displayed to share with your players.
+
+Start the game once __everyone__ has joined. Players will not be able to join once the server begins.
+
+---
+
+# Joining a game
+
+If you are joining your friend's game, select "Join Game" and input the local IP address and port exactly as displayed on your friend's screen.
+
+Wait until the host starts the game. Once you leave the game, you will not be able to re-join.
+
+---
+
+# HAVE FUN!!!!!!!!!!!!!!!!!!!! <3
