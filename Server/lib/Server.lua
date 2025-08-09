@@ -22,7 +22,7 @@ function Server.load(port) -- load
 		love.event.quit()
 	end
 	math.randomseed(os.time() + socket.gettime())
-	Server.level_index = math.random(1, 3)
+	Server.level_index = math.random(1, 1)
 	Server.clients = {}
 	Server.client_count = 0
 	Server.client_sockets = {}
