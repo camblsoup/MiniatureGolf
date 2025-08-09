@@ -63,7 +63,13 @@ function Game.update(dt)
 
 	if love.mouse.isDown(1) then
 		for _, golf_ball in ipairs((SM.currentScene and SM.currentScene.golf_balls) or Game.golf_balls) do
-			golf_ball:aim(Game, love.mouse.getX(), love.mouse.getY())
+			if golf_ball:aim(Game, love.mouse.getX(), love.mouse.getY()) then
+				Client.send_data_to_server({ type = "grab", data = {
+					ball_id = golf_ball.ball_id,
+					color = Client.color,
+					client_id = Client.client_id,
+				}})
+			end
 		end
 	end
 end
@@ -125,7 +131,7 @@ function Game.mousereleased(x, y, button)
 
 	Game.current_ball_id = 0
 	for _, golf_ball in ipairs((SM.currentScene and SM.currentScene.golf_balls) or Game.golf_balls) do
-		if golf_ball.is_aiming and golf_ball.current_shooter_id == 0 and not golf_ball:isMoving() then
+		if golf_ball.is_aiming and not golf_ball.locked and not golf_ball:isMoving() then
 			-- stop drawing the aim line immediately; apply local movement for responsiveness
 			golf_ball.is_aiming = false
 			golf_ball:shoot(golf_ball.shooting_magnitude, golf_ball.shooting_angle)
@@ -135,8 +141,6 @@ function Game.mousereleased(x, y, button)
 					ball_id = golf_ball.ball_id,
 					shooting_magnitude = golf_ball.shooting_magnitude,
 					shooting_angle = golf_ball.shooting_angle,
-					color = Client.color,
-					client_id = Client.client_id,
 				},
 			})
 		end

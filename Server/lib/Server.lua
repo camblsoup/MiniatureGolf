@@ -104,9 +104,7 @@ function Server:fixed_update(dt)
 			self.golf_balls[golf_ball.ball_id].scored = true
 			self.golf_balls[golf_ball.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
 			self.num_golf_balls = self.num_golf_balls - 1
-			if golf_ball.current_shooter_id >= 10 then
-				self.clients[golf_ball.current_shooter_id].score = self.clients[golf_ball.current_shooter_id].score + 1
-			end
+			self.clients[golf_ball.current_shooter_id].score = self.clients[golf_ball.current_shooter_id].score + 1
 			Server.send_data_to_all_clients({
 				type = "goal_reached",
 				data = {
@@ -214,18 +212,28 @@ function Server.receive_data()
 			local data_type = received_data.type
 			local data = received_data.data
 
-			if data_type == "shoot" then
+			if data_type == "grab" then
 				local golf_ball = Server.golf_balls[data.ball_id]
 				golf_ball.current_shooter_id = data.client_id
+				Server.send_data_to_all_clients({
+					type = "grab",
+					data = {
+						ball_id = data.ball_id,
+						color = data.color,
+						client_id = data.client_id
+					}
+				})
+			end
+
+			if data_type == "shoot" then
+				local golf_ball = Server.golf_balls[data.ball_id]
 				golf_ball:shoot(data.shooting_magnitude, data.shooting_angle)
 				Server.send_data_to_all_clients({
 					type = "shoot",
 					data = {
 						ball_id = data.ball_id,
-						client_id = data.client_id,
 						shooting_magnitude = data.shooting_magnitude,
 						shooting_angle = data.shooting_angle,
-						color = data.color,
 					},
 				})
 			end

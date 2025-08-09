@@ -20,7 +20,7 @@ function GolfBall.new(world, id, x, y, audiosource)
 
 	-- Communication
 	self.ball_id = id
-	self.current_shooter_id = 0 -- Locked when id is not 0
+	self.locked = false
 	self.color = { 1, 1, 1 }
 	self.scored = false
 
@@ -41,9 +41,10 @@ end
 -- Runs in update()
 -- Golf balls wait for their client to click on it
 function GolfBall:aim(client, mouse_x, mouse_y)
+	local grab = false -- Locking
 	if
 		self.scored
-		or self.current_shooter_id ~= 0
+		or self.locked
 		or self:isMoving()
 		or (client.current_ball_id ~= 0 and client.current_ball_id ~= self.ball_id)
 	then
@@ -58,6 +59,7 @@ function GolfBall:aim(client, mouse_x, mouse_y)
 		if initial_magnitude <= self.shape:getRadius() then
 			self.is_aiming = true
 			client.current_ball_id = self.ball_id
+			grab = true -- Locking
 		else
 			return
 		end
@@ -81,6 +83,7 @@ function GolfBall:aim(client, mouse_x, mouse_y)
 	if self.shooting_magnitude > 1.0 then
 		self.shooting_magnitude = 1.0
 	end
+	return grab
 end
 
 function GolfBall:display()
@@ -115,7 +118,7 @@ function GolfBall:isMoving()
 end
 
 function GolfBall:finish_ball_shoot()
-	self.current_shooter_id = 0
+	self.locked = false
 	self.rolling = false
 	self.color = { 1, 1, 1 }
 	self.mouse_x = 0

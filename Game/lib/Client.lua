@@ -65,10 +65,14 @@ function Client.receive_data()
 			SM.currentScene.new_world(data.level_data)
 		end
 
+		if data_type == "grab" then
+			local golf_ball = SM.currentScene.golf_balls[data.ball_id]
+			golf_ball:update_color(data.color)
+			golf_ball.locked = Client.client_id ~= data.client_id
+		end
+
 		if data_type == "shoot" then
 			local golf_ball = SM.currentScene.golf_balls[data.ball_id]
-			golf_ball.current_shooter_id = data.client_id
-			golf_ball:update_color(data.color)
 			golf_ball:shoot(data.shooting_magnitude, data.shooting_angle)
 		end
 
