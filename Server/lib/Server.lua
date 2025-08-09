@@ -25,6 +25,7 @@ function Server.load(port) -- load
 	Server.level_index = math.random(1, 1)
 	Server.clients = {}
 	Server.client_count = 0
+	Server.scores = {}
 	Server.client_sockets = {}
 
 	Server.tick = 0
@@ -60,6 +61,7 @@ function Server.listen()
 			}
 			Server.clients[clientObj.id] = clientObj
 			table.insert(Server.client_sockets, client)
+			table.insert(Server.scores, 0)
 
 			client:send(json.encode({
 				type = "id",
@@ -106,11 +108,13 @@ function Server:fixed_update(dt)
 			self.golf_balls[golf_ball.ball_id].scored = true
 			self.golf_balls[golf_ball.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
 			self.num_golf_balls = self.num_golf_balls - 1
-			self.clients[golf_ball.current_shooter_id].score = self.clients[golf_ball.current_shooter_id].score + 1
+			self.scores[Server.clients[golf_ball.current_shooter_id].player_num] = self.scores
+				[Server.clients[golf_ball.current_shooter_id].player_num] + 1
 			Server.send_data_to_all_clients({
 				type = "goal_reached",
 				data = {
 					ball_id = golf_ball.ball_id,
+					scores = Server.scores,
 					client_scored = golf_ball.current_shooter_id,
 				},
 			})
@@ -139,6 +143,7 @@ function Server.broadcast_state()
 		type = "state_update",
 		data = {
 			tick = Server.tick,
+			scores = Server.scores,
 			balls = ball_states,
 		},
 	})
@@ -256,15 +261,12 @@ function Server.receive_data()
 					client_instance.socket:close()
 					table.remove(Server.client_sockets, client_instance.player_num)
 					table.remove(Server.clients, received_data.id)
+					Server.client_count = Server.client_count - 1
 				end
 			end
 			if data_type == "start" and Server.clients[received_data.id].player_num == 1 then
 				Server.game_start = true
-				local scores = {}
-				for id, client in pairs(Server.clients) do
-					table.insert(scores, client.score)
-				end
-				Server.send_data_to_all_clients({ type = "start", data = { scores = scores } })
+				Server.send_data_to_all_clients({ type = "start", data = { scores = Server.scores } })
 				Server:new_world()
 			end
 			if data_type == "request_setup" then
@@ -326,9 +328,9 @@ function Server:new_world()
 	end
 
 	-- Create obstacles
-	table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height / 2, 10, height)) -- Left wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, 0, height / 2, 10, height))  -- Left wall
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width, height / 2, 10, height)) -- Right wall
-	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, 0, width, 10)) -- Top wall
+	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, 0, width, 10))    -- Top wall
 	table.insert(self.obstacles, Obstacle.new(self.game_world, width / 2, height, width, 10)) -- Bottom wall
 
 	for _, obstacle_data in ipairs(obstacles_data) do

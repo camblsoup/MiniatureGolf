@@ -22,7 +22,7 @@ local scoreboard_font = love.graphics.newFont("assets/dogicapixelbold.ttf", 15)
 local scoreboard_posX = love.graphics.getWidth() - 200
 local scoreboard_posY = 20
 local scoreboard_width = 175
-local scoreboard_height = 200
+local scoreboard_height = 75
 local button_width = 75
 local button_height = 20
 local row = 0
@@ -110,6 +110,11 @@ function Game.draw()
 
 	love.graphics.setColor(1, 1, 1)
 	local button = Game.is_scoreboard_visible and Game.scoreboard_buttons.hide or Game.scoreboard_buttons.show
+	if Game.is_scoreboard_visible then
+		button.y = scoreboard_posY + scoreboard_height + 10
+	else
+		button.y = scoreboard_posY + 10
+	end
 	love.graphics.draw(
 		button.img,
 		button.x,
@@ -197,9 +202,9 @@ function Game.new_world(level_data)
 
 	-- Create obstacles
 	Game.obstacles = {}
-	table.insert(Game.obstacles, Obstacle.new(Game.game_world, 0, height / 2, 10, height))    -- Left wall
+	table.insert(Game.obstacles, Obstacle.new(Game.game_world, 0, height / 2, 10, height))  -- Left wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width, height / 2, 10, height)) -- Right wall
-	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, 0, width, 10))      -- Top wall
+	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, 0, width, 10))    -- Top wall
 	table.insert(Game.obstacles, Obstacle.new(Game.game_world, width / 2, height, width, 10)) -- Bottom wall
 
 	for _, obstacle_data in ipairs(obstacles_data) do
@@ -216,6 +221,8 @@ end
 function Game.Scoreboard()
 	love.graphics.setFont(scoreboard_font)
 
+	scoreboard_height = 50 + (30 * #Game.scores)
+
 	-- black background
 	love.graphics.setColor(0, 0, 0)
 	love.graphics.rectangle("fill", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
@@ -224,21 +231,20 @@ function Game.Scoreboard()
 	love.graphics.setColor(255, 255, 255) -- Sets the drawing color to red
 	love.graphics.rectangle("line", scoreboard_posX, scoreboard_posY, scoreboard_width, scoreboard_height, 5, 5)
 
-	love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
-
-	row = 0
 	-- draw up to 4 clients from the scores table
-	for client_id, score in pairs(Game.scores) do
-		row = row + 1
+	for i, score in ipairs(Game.scores) do
 		local padding = 20
-		local next_height = padding + 40 * row
-		local short_id = tostring(client_id):sub(-4)
+		local next_height = padding + 40 * i
 		love.graphics.setColor(Client.color)
-		local line = string.format("Player %s: %s", row, tostring(score or 0))
+		local line = string.format("Player %s: %s", i, tostring(score or 0))
 		love.graphics.setColor(1, 1, 1)
 		love.graphics.print(line, scoreboard_posX + 10, next_height)
-		if row >= 4 then break end
+		if i > 4 then
+			break
+		end
 	end
+
+	love.graphics.print("SCOREBOARD", scoreboard_posX + 10, 30)
 end
 
 ------------------------------------------------------------------------------------

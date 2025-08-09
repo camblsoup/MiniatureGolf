@@ -87,14 +87,11 @@ function Client.receive_data()
 			SM.currentScene.golf_balls[data.ball_id].scored = true
 			SM.currentScene.golf_balls[data.ball_id].body:setPosition(-50, -50) -- Move the ball off-screen
 			-- Update scoreboard
-			local cid = data.client_scored
-			if cid then
-				SM.currentScene.scores = SM.currentScene.scores or {}
-				SM.currentScene.scores[cid] = (SM.currentScene.scores[cid] or 0) + 1
-			end
+			SM.currentScene.scores = data.scores
 		end
 
 		if data_type == "state_update" then
+			SM.currentScene.scores = data.scores
 			local ball_states = data.balls
 			for i, ball_data in ipairs(ball_states) do
 				local golf_ball = SM.currentScene.golf_balls[i].body

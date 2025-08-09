@@ -34,6 +34,7 @@ function Joined.draw()
 	love.graphics.printf("Successfully joined!", 0, 100, love.graphics.getWidth(), "center")
 	love.graphics.printf("Waiting for the host to start the game...", 0, 150, love.graphics.getWidth(), "center")
 
+	love.graphics.printf("You are player #" .. Client.player_num, 0, 400, love.graphics.getWidth(), "center")
 
 	for _, button in pairs(Joined.buttons) do
 		love.graphics.draw(
